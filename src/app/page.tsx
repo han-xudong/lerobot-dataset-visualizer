@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
-import type { ChangeEvent, InputHTMLAttributes } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -35,51 +34,9 @@ const EXAMPLE_DATASETS = [
   "lerobot/aloha_static_cups_open",
 ];
 
-type DirectoryPickerInputProps = InputHTMLAttributes<HTMLInputElement> & {
-  webkitdirectory?: string;
-  directory?: string;
-};
-
-type PickerFile = File & {
-  path?: string;
-  webkitRelativePath?: string;
-};
-
-const directoryPickerProps: DirectoryPickerInputProps = {
-  webkitdirectory: "",
-  directory: "",
-};
-
-function trimRelativeSuffix(fullPath: string, relativePath: string): string {
-  const normalizedFullPath = fullPath.replace(/\\/g, "/");
-  const normalizedRelativePath = relativePath.replace(/\\/g, "/");
-  if (!normalizedRelativePath) {
-    return normalizedFullPath;
-  }
-
-  const suffix = `/${normalizedRelativePath}`;
-  if (normalizedFullPath.endsWith(suffix)) {
-    return normalizedFullPath.slice(0, -suffix.length);
-  }
-
-  return normalizedFullPath;
-}
-
-function deriveDirectoryPathFromFiles(files: FileList | null): string | null {
-  if (!files || files.length === 0) return null;
-
-  const firstFile = files[0] as PickerFile;
-  if (!firstFile.path) {
-    return null;
-  }
-
-  return trimRelativeSuffix(firstFile.path, firstFile.webkitRelativePath ?? "");
-}
-
 function HomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const directoryInputRef = useRef<HTMLInputElement>(null);
 
   // Handle redirects with useEffect instead of direct redirect
   useEffect(() => {
@@ -178,9 +135,6 @@ function HomeInner() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
-  const [localPickerMessage, setLocalPickerMessage] = useState<string | null>(
-    null,
-  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -239,34 +193,10 @@ function HomeInner() {
   const navigate = useCallback(
     (value: string) => {
       setShowSuggestions(false);
-      setLocalPickerMessage(null);
       router.push(buildDatasetRoute(value));
     },
     [router],
   );
-
-  const handleDirectorySelection = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => {
-      const inferredPath = deriveDirectoryPathFromFiles(event.target.files);
-      if (inferredPath) {
-        setQuery(inferredPath);
-        setLocalPickerMessage(
-          "Directory path captured. Press Go to load it as a local dataset.",
-        );
-      } else {
-        setLocalPickerMessage(
-          "This browser does not expose the selected directory path. Paste the local path manually after choosing the folder.",
-        );
-      }
-      event.target.value = "";
-    },
-    [],
-  );
-
-  const openDirectoryPicker = useCallback(() => {
-    setLocalPickerMessage(null);
-    directoryInputRef.current?.click();
-  }, []);
 
   const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -325,34 +255,6 @@ function HomeInner() {
           onSubmit={handleSubmit}
           className="flex flex-col items-center gap-3"
         >
-          <input
-            {...directoryPickerProps}
-            ref={directoryInputRef}
-            type="file"
-            multiple
-            className="hidden"
-            onChange={handleDirectorySelection}
-          />
-
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-md border border-emerald-300/30 bg-emerald-500/15 text-emerald-100 text-sm font-medium hover:bg-emerald-500/25 transition-colors"
-              onClick={openDirectoryPicker}
-            >
-              Choose Local Directory
-            </button>
-            <span className="px-3 py-2 rounded-md bg-white/8 text-white/55 text-sm border border-white/10">
-              Best effort: auto-fills path when the browser exposes it
-            </span>
-          </div>
-
-          {localPickerMessage && (
-            <p className="max-w-2xl text-sm text-emerald-100/90 bg-emerald-500/10 border border-emerald-300/20 rounded-md px-4 py-2">
-              {localPickerMessage}
-            </p>
-          )}
-
           <div className="flex gap-2 justify-center">
             <div ref={containerRef} className="relative">
               {/* Search icon */}
@@ -452,7 +354,7 @@ function HomeInner() {
           </div>
         </form>
 
-        <div className="mt-5 w-full max-w-3xl grid gap-3 md:grid-cols-3 text-left">
+        <div className="mt-5 w-full max-w-2xl grid gap-3 md:grid-cols-2 text-left">
           <div className="rounded-xl border border-white/10 bg-white/8 px-4 py-4 backdrop-blur-sm">
             <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">
               Remote
@@ -472,15 +374,6 @@ function HomeInner() {
                 /data/lerobot/my_dataset
               </span>
               .
-            </p>
-          </div>
-          <div className="rounded-xl border border-amber-300/20 bg-amber-500/10 px-4 py-4 backdrop-blur-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60 mb-2">
-              Picker Limitation
-            </p>
-            <p className="text-sm text-amber-50/90">
-              Browsers often hide the absolute folder path. If auto-fill fails,
-              choose the folder for validation and paste the path manually.
             </p>
           </div>
         </div>
