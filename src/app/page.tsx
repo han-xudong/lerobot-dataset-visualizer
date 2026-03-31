@@ -1,8 +1,13 @@
 "use client";
 import { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import type { ChangeEvent, InputHTMLAttributes } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import {
+  buildDatasetRoute,
+  isLikelyLocalDatasetInput,
+} from "@/utils/datasetSource";
 
 declare global {
   interface Window {
@@ -30,9 +35,51 @@ const EXAMPLE_DATASETS = [
   "lerobot/aloha_static_cups_open",
 ];
 
+type DirectoryPickerInputProps = InputHTMLAttributes<HTMLInputElement> & {
+  webkitdirectory?: string;
+  directory?: string;
+};
+
+type PickerFile = File & {
+  path?: string;
+  webkitRelativePath?: string;
+};
+
+const directoryPickerProps: DirectoryPickerInputProps = {
+  webkitdirectory: "",
+  directory: "",
+};
+
+function trimRelativeSuffix(fullPath: string, relativePath: string): string {
+  const normalizedFullPath = fullPath.replace(/\\/g, "/");
+  const normalizedRelativePath = relativePath.replace(/\\/g, "/");
+  if (!normalizedRelativePath) {
+    return normalizedFullPath;
+  }
+
+  const suffix = `/${normalizedRelativePath}`;
+  if (normalizedFullPath.endsWith(suffix)) {
+    return normalizedFullPath.slice(0, -suffix.length);
+  }
+
+  return normalizedFullPath;
+}
+
+function deriveDirectoryPathFromFiles(files: FileList | null): string | null {
+  if (!files || files.length === 0) return null;
+
+  const firstFile = files[0] as PickerFile;
+  if (!firstFile.path) {
+    return null;
+  }
+
+  return trimRelativeSuffix(firstFile.path, firstFile.webkitRelativePath ?? "");
+}
+
 function HomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const directoryInputRef = useRef<HTMLInputElement>(null);
 
   // Handle redirects with useEffect instead of direct redirect
   useEffect(() => {
@@ -43,7 +90,7 @@ function HomeInner() {
           .map((x) => parseInt(x.trim(), 10))
           .filter((x) => !isNaN(x))[0] ?? 0;
 
-      router.push(`/${process.env.REPO_ID}/episode_${episodeN}`);
+      router.push(buildDatasetRoute(process.env.REPO_ID, episodeN));
       return;
     }
 
@@ -131,10 +178,20 @@ function HomeInner() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
+  const [localPickerMessage, setLocalPickerMessage] = useState<string | null>(
+    null,
+  );
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!query.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      setIsLoading(false);
+      setHasFetched(false);
+      return;
+    }
+    if (isLikelyLocalDatasetInput(query)) {
       setSuggestions([]);
       setShowSuggestions(false);
       setIsLoading(false);
@@ -182,10 +239,34 @@ function HomeInner() {
   const navigate = useCallback(
     (value: string) => {
       setShowSuggestions(false);
-      router.push(value);
+      setLocalPickerMessage(null);
+      router.push(buildDatasetRoute(value));
     },
     [router],
   );
+
+  const handleDirectorySelection = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const inferredPath = deriveDirectoryPathFromFiles(event.target.files);
+      if (inferredPath) {
+        setQuery(inferredPath);
+        setLocalPickerMessage(
+          "Directory path captured. Press Go to load it as a local dataset.",
+        );
+      } else {
+        setLocalPickerMessage(
+          "This browser does not expose the selected directory path. Paste the local path manually after choosing the folder.",
+        );
+      }
+      event.target.value = "";
+    },
+    [],
+  );
+
+  const openDirectoryPicker = useCallback(() => {
+    setLocalPickerMessage(null);
+    directoryInputRef.current?.click();
+  }, []);
 
   const handleSubmit = (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -217,6 +298,9 @@ function HomeInner() {
         <div id="yt-bg-player" />
       </div>
 
+      {/* Blur veil to soften the video and improve foreground readability */}
+      <div className="fixed inset-0 -z-0 bg-black/15 backdrop-blur-[10px]" />
+
       {/* Gradient overlay — darker at edges, lighter at center for depth */}
       <div className="fixed inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.80)_100%)]" />
 
@@ -233,110 +317,182 @@ function HomeInner() {
 
         {/* Subtitle */}
         <p className="text-white/55 text-base md:text-lg mb-8 max-w-md">
-          Explore and visualize robot learning datasets from Hugging Face
+          Explore robot learning datasets from Hugging Face or a local directory
         </p>
 
         {/* Search form */}
-        <form onSubmit={handleSubmit} className="flex gap-2 justify-center">
-          <div ref={containerRef} className="relative">
-            {/* Search icon */}
-            <svg
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col items-center gap-3"
+        >
+          <input
+            {...directoryPickerProps}
+            ref={directoryInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={handleDirectorySelection}
+          />
+
+          <div className="flex flex-wrap gap-2 justify-center">
+            <button
+              type="button"
+              className="px-4 py-2 rounded-md border border-emerald-300/30 bg-emerald-500/15 text-emerald-100 text-sm font-medium hover:bg-emerald-500/25 transition-colors"
+              onClick={openDirectoryPicker}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
-              />
-            </svg>
-
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              onFocus={() => query.trim() && setShowSuggestions(true)}
-              placeholder="Enter dataset id (e.g. lerobot/pusht)"
-              className="pl-10 pr-4 py-2.5 rounded-md text-base text-white bg-white/10 backdrop-blur-sm border border-white/30 focus:outline-none focus:border-sky-400 focus:bg-white/15 w-[380px] shadow-md placeholder:text-white/40 transition-colors"
-              autoComplete="off"
-            />
-
-            {/* Suggestions dropdown */}
-            {showSuggestions && (
-              <ul className="absolute left-0 right-0 top-full mt-1 rounded-md bg-slate-900/95 backdrop-blur-sm border border-white/10 shadow-xl overflow-hidden z-50 max-h-64 overflow-y-auto">
-                {isLoading ? (
-                  <li className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/50">
-                    <svg
-                      className="animate-spin w-4 h-4 shrink-0"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
-                    </svg>
-                    Searching…
-                  </li>
-                ) : suggestions.length > 0 ? (
-                  suggestions.map((id, i) => (
-                    <li key={id}>
-                      <button
-                        type="button"
-                        className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
-                          i === activeIndex
-                            ? "bg-sky-600 text-white"
-                            : "text-slate-200 hover:bg-slate-700"
-                        }`}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          navigate(id);
-                        }}
-                        onMouseEnter={() => setActiveIndex(i)}
-                      >
-                        {id}
-                      </button>
-                    </li>
-                  ))
-                ) : (
-                  hasFetched && (
-                    <li className="px-4 py-3 text-sm text-white/40">
-                      No datasets found
-                    </li>
-                  )
-                )}
-              </ul>
-            )}
+              Choose Local Directory
+            </button>
+            <span className="px-3 py-2 rounded-md bg-white/8 text-white/55 text-sm border border-white/10">
+              Best effort: auto-fills path when the browser exposes it
+            </span>
           </div>
 
-          <button
-            type="submit"
-            className="px-5 py-2.5 rounded-md bg-sky-500 text-white font-semibold text-base hover:bg-sky-400 active:scale-95 transition-all shadow-md flex items-center gap-2"
-          >
-            Go
-            <kbd className="text-xs font-mono bg-white/20 rounded px-1 py-0.5 leading-tight">
-              ↵
-            </kbd>
-          </button>
+          {localPickerMessage && (
+            <p className="max-w-2xl text-sm text-emerald-100/90 bg-emerald-500/10 border border-emerald-300/20 rounded-md px-4 py-2">
+              {localPickerMessage}
+            </p>
+          )}
+
+          <div className="flex gap-2 justify-center">
+            <div ref={containerRef} className="relative">
+              {/* Search icon */}
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"
+                />
+              </svg>
+
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => query.trim() && setShowSuggestions(true)}
+                placeholder="Enter HF dataset id or local directory"
+                className="pl-10 pr-4 py-2.5 rounded-md text-base text-white bg-white/10 backdrop-blur-sm border border-white/30 focus:outline-none focus:border-sky-400 focus:bg-white/15 w-[380px] shadow-md placeholder:text-white/40 transition-colors"
+                autoComplete="off"
+              />
+
+              {/* Suggestions dropdown */}
+              {showSuggestions && (
+                <ul className="absolute left-0 right-0 top-full mt-1 rounded-md bg-slate-900/95 backdrop-blur-sm border border-white/10 shadow-xl overflow-hidden z-50 max-h-64 overflow-y-auto">
+                  {isLoading ? (
+                    <li className="flex items-center gap-2.5 px-4 py-3 text-sm text-white/50">
+                      <svg
+                        className="animate-spin w-4 h-4 shrink-0"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      Searching…
+                    </li>
+                  ) : suggestions.length > 0 ? (
+                    suggestions.map((id, i) => (
+                      <li key={id}>
+                        <button
+                          type="button"
+                          className={`w-full text-left px-4 py-2.5 text-sm transition-colors ${
+                            i === activeIndex
+                              ? "bg-sky-600 text-white"
+                              : "text-slate-200 hover:bg-slate-700"
+                          }`}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            navigate(id);
+                          }}
+                          onMouseEnter={() => setActiveIndex(i)}
+                        >
+                          {id}
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    hasFetched && (
+                      <li className="px-4 py-3 text-sm text-white/40">
+                        No datasets found
+                      </li>
+                    )
+                  )}
+                </ul>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-md bg-sky-500 text-white font-semibold text-base hover:bg-sky-400 active:scale-95 transition-all shadow-md flex items-center gap-2"
+            >
+              Go
+              <kbd className="text-xs font-mono bg-white/20 rounded px-1 py-0.5 leading-tight">
+                ↵
+              </kbd>
+            </button>
+          </div>
         </form>
+
+        <div className="mt-5 w-full max-w-3xl grid gap-3 md:grid-cols-3 text-left">
+          <div className="rounded-xl border border-white/10 bg-white/8 px-4 py-4 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">
+              Remote
+            </p>
+            <p className="text-sm text-white/80">
+              Paste a Hugging Face dataset id such as{" "}
+              <span className="font-mono text-sky-200">lerobot/pusht</span>.
+            </p>
+          </div>
+          <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-4 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-emerald-100/60 mb-2">
+              Local Path
+            </p>
+            <p className="text-sm text-emerald-50/90">
+              Paste an absolute or relative directory path like{" "}
+              <span className="font-mono text-emerald-100">
+                /data/lerobot/my_dataset
+              </span>
+              .
+            </p>
+          </div>
+          <div className="rounded-xl border border-amber-300/20 bg-amber-500/10 px-4 py-4 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-100/60 mb-2">
+              Picker Limitation
+            </p>
+            <p className="text-sm text-amber-50/90">
+              Browsers often hide the absolute folder path. If auto-fill fails,
+              choose the folder for validation and paste the path manually.
+            </p>
+          </div>
+        </div>
 
         {/* Example Datasets */}
         <div className="mt-8">
+          <p className="text-white/50 text-sm mb-4 max-w-xl">
+            Supports Hugging Face datasets like{" "}
+            <span className="font-mono">lerobot/pusht</span> and local
+            directories like{" "}
+            <span className="font-mono">/data/lerobot/my_dataset</span>.
+          </p>
           <p className="text-white/40 text-xs uppercase tracking-widest mb-3 font-medium">
             Example Datasets
           </p>

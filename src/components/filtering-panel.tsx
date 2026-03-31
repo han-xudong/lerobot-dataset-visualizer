@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useCallback } from "react";
 import { useFlaggedEpisodes } from "@/context/flagged-episodes-context";
+import { getDatasetDisplayName, isLocalDatasetId } from "@/utils/datasetSource";
 import type {
   CrossEpisodeVarianceData,
   LowMovementEpisode,
@@ -244,12 +245,31 @@ function FlaggedIdsCopyBar({
 
   const ids = useMemo(() => [...flagged].sort((a, b) => a - b), [flagged]);
   const idStr = ids.join(", ");
+  const isLocalDataset = isLocalDatasetId(repoId);
+  const displayName = getDatasetDisplayName(repoId);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(idStr);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }, [idStr]);
+
+  const deleteEpisodesCommand = [
+    "# Delete episodes (modifies original dataset)",
+    "lerobot-edit-dataset \\",
+    "    --repo_id " + repoId + " \\",
+    "    --operation.type delete_episodes \\",
+    `    --operation.episode_indices \"[${ids.join(", ")}]\"`,
+  ].join("\n");
+
+  const deleteAndSaveCommand = [
+    "# Delete episodes and save to a new dataset (preserves original)",
+    "lerobot-edit-dataset \\",
+    "    --repo_id " + repoId + " \\",
+    "    --new_repo_id " + repoId + "_filtered \\",
+    "    --operation.type delete_episodes \\",
+    `    --operation.episode_indices \"[${ids.join(", ")}]\"`,
+  ].join("\n");
 
   if (count === 0) return null;
 
@@ -331,19 +351,35 @@ function FlaggedIdsCopyBar({
         </button>
       )}
       <div className="bg-slate-900/60 rounded-md px-3 py-2 border border-slate-700/60 space-y-2.5">
-        <p className="text-xs text-slate-400">
-          <a
-            href="https://github.com/huggingface/lerobot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-orange-400 underline"
-          >
-            LeRobot CLI
-          </a>{" "}
-          — delete flagged episodes:
-        </p>
-        <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">{`# Delete episodes (modifies original dataset)\nlerobot-edit-dataset \\\n    --repo_id ${repoId} \\\n    --operation.type delete_episodes \\\n    --operation.episode_indices "[${ids.join(", ")}]"`}</pre>
-        <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">{`# Delete episodes and save to a new dataset (preserves original)\nlerobot-edit-dataset \\\n    --repo_id ${repoId} \\\n    --new_repo_id ${repoId}_filtered \\\n    --operation.type delete_episodes \\\n    --operation.episode_indices "[${ids.join(", ")}]"`}</pre>
+        {isLocalDataset ? (
+          <>
+            <p className="text-xs text-slate-400">Local dataset directory:</p>
+            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+              {displayName}
+            </pre>
+            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">{`# Episode indices selected for removal from the local dataset\n[${ids.join(", ")}]`}</pre>
+          </>
+        ) : (
+          <>
+            <p className="text-xs text-slate-400">
+              <a
+                href="https://github.com/huggingface/lerobot"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-orange-400 underline"
+              >
+                LeRobot CLI
+              </a>{" "}
+              — delete flagged episodes:
+            </p>
+            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+              {deleteEpisodesCommand}
+            </pre>
+            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+              {deleteAndSaveCommand}
+            </pre>
+          </>
+        )}
       </div>
     </div>
   );

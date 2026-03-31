@@ -21,20 +21,24 @@ import OverviewPanel from "@/components/overview-panel";
 import Loading from "@/components/loading-component";
 import { hasURDFSupport } from "@/lib/so101-robot";
 import {
-  getAdjacentEpisodesVideoInfo,
-  computeColumnMinMax,
-  getEpisodeDataSafe,
-  loadAllEpisodeLengthsV3,
-  loadAllEpisodeFrameInfo,
-  loadCrossEpisodeActionVariance,
   type EpisodeData,
+  type ChartRow,
   type ColumnMinMax,
   type EpisodeLengthStats,
   type EpisodeFramesData,
   type CrossEpisodeVarianceData,
 } from "./fetch-data";
-import { getDatasetVersionAndInfo } from "@/utils/versionUtils";
-import type { DatasetMetadata } from "@/utils/parquetUtils";
+import {
+  buildDatasetId,
+  getDatasetDisplayName,
+  isLocalDatasetId,
+} from "@/utils/datasetSource";
+import {
+  fetchAdjacentEpisodeVideos,
+  fetchCrossEpisodeVariance,
+  fetchEpisodeFrames,
+  fetchEpisodeLengthStats,
+} from "./actions";
 
 const URDFViewer = lazy(() => import("@/components/urdf-viewer"));
 const ActionInsightsPanel = lazy(
@@ -54,41 +58,22 @@ export default function EpisodeViewer({
   org,
   dataset,
   episodeId,
+  initialData,
+  initialError,
 }: {
   org: string;
   dataset: string;
   episodeId: number;
+  initialData: EpisodeData | null;
+  initialError: string | null;
 }) {
-  const [data, setData] = useState<EpisodeData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const requestIdRef = useRef(0);
+  const [data, setData] = useState<EpisodeData | null>(initialData);
+  const [error, setError] = useState<string | null>(initialError);
 
   useEffect(() => {
-    if (Number.isNaN(episodeId)) {
-      setError("Invalid episode id.");
-      setData(null);
-      return;
-    }
-    const requestId = ++requestIdRef.current;
-    setError(null);
-    setData(null);
-    getEpisodeDataSafe(org, dataset, episodeId)
-      .then(({ data: loaded, error: loadError }) => {
-        if (requestIdRef.current !== requestId) return;
-        if (loadError) {
-          setError(loadError);
-          setData(null);
-          return;
-        }
-        setData(loaded ?? null);
-      })
-      .catch((err) => {
-        if (requestIdRef.current !== requestId) return;
-        const message = err instanceof Error ? err.message : String(err);
-        setError(message || "Unknown error");
-        setData(null);
-      });
-  }, [org, dataset, episodeId]);
+    setData(initialData);
+    setError(initialError);
+  }, [initialData, initialError, org, dataset, episodeId]);
 
   if (error) {
     return (
@@ -171,6 +156,53 @@ function EpisodeViewerInner({
   const [insightsLoading, setInsightsLoading] = useState(false);
   const insightsLoadedRef = useRef(false);
   const mountedRef = useRef(true);
+  const datasetId = org && dataset ? buildDatasetId(org, dataset) : null;
+
+  const computeColumnMinMax = useCallback(
+    (chartDataGroups: ChartRow[][]): ColumnMinMax[] => {
+      const stats: Record<string, { min: number; max: number }> = {};
+
+      for (const group of chartDataGroups) {
+        for (const row of group) {
+          for (const [key, value] of Object.entries(row)) {
+            if (key === "timestamp") continue;
+
+            if (typeof value === "number" && Number.isFinite(value)) {
+              if (!stats[key]) {
+                stats[key] = { min: value, max: value };
+              } else {
+                if (value < stats[key].min) stats[key].min = value;
+                if (value > stats[key].max) stats[key].max = value;
+              }
+              continue;
+            }
+
+            if (typeof value === "object" && value !== null) {
+              for (const [subKey, subVal] of Object.entries(value)) {
+                const fullKey = `${key} | ${subKey}`;
+                if (typeof subVal !== "number" || !Number.isFinite(subVal)) {
+                  continue;
+                }
+                if (!stats[fullKey]) {
+                  stats[fullKey] = { min: subVal, max: subVal };
+                } else {
+                  if (subVal < stats[fullKey].min) stats[fullKey].min = subVal;
+                  if (subVal > stats[fullKey].max) stats[fullKey].max = subVal;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      return Object.entries(stats).map(([column, { min, max }]) => ({
+        column,
+        min: Math.round(min * 1000) / 1000,
+        max: Math.round(max * 1000) / 1000,
+      }));
+    },
+    [],
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -237,13 +269,8 @@ function EpisodeViewerInner({
     statsLoadedRef.current = true;
     setStatsLoading(true);
     setColumnMinMax(computeColumnMinMax(data.chartDataGroups));
-    if (org && dataset) {
-      const repoId = `${org}/${dataset}`;
-      getDatasetVersionAndInfo(repoId)
-        .then(({ version, info }) => {
-          if (version !== "v3.0") return null;
-          return loadAllEpisodeLengthsV3(repoId, version, info.fps);
-        })
+    if (datasetId) {
+      fetchEpisodeLengthStats(org!, dataset!)
         .then((result) => {
           if (!mountedRef.current) return;
           setEpisodeLengthStats(result);
@@ -258,18 +285,10 @@ function EpisodeViewerInner({
   };
 
   const loadFrames = () => {
-    if (framesLoadedRef.current || !org || !dataset) return;
+    if (framesLoadedRef.current || !datasetId) return;
     framesLoadedRef.current = true;
     setFramesLoading(true);
-    const repoId = `${org}/${dataset}`;
-    getDatasetVersionAndInfo(repoId)
-      .then(({ version, info }) =>
-        loadAllEpisodeFrameInfo(
-          repoId,
-          version,
-          info as unknown as DatasetMetadata,
-        ),
-      )
+    fetchEpisodeFrames(org!, dataset!)
       .then((result) => {
         if (!mountedRef.current) return;
         setEpisodeFramesData(result);
@@ -284,19 +303,10 @@ function EpisodeViewerInner({
   };
 
   const loadInsights = () => {
-    if (insightsLoadedRef.current || !org || !dataset) return;
+    if (insightsLoadedRef.current || !datasetId) return;
     insightsLoadedRef.current = true;
     setInsightsLoading(true);
-    const repoId = `${org}/${dataset}`;
-    getDatasetVersionAndInfo(repoId)
-      .then(({ version, info }) =>
-        loadCrossEpisodeActionVariance(
-          repoId,
-          version,
-          info as unknown as DatasetMetadata,
-          info.fps,
-        ),
-      )
+    fetchCrossEpisodeVariance(org!, dataset!)
       .then((result) => {
         if (!mountedRef.current) return;
         setCrossEpData(result);
@@ -348,18 +358,18 @@ function EpisodeViewerInner({
     currentPage * pageSize,
   );
 
-  // Preload adjacent episodes' videos via <link rel="preload"> tags
+  // Warm the browser cache for adjacent episodes' videos without relying on
+  // unsupported preload hints for video resources.
   useEffect(() => {
     if (!org || !dataset) return;
     const links: HTMLLinkElement[] = [];
 
-    getAdjacentEpisodesVideoInfo(org, dataset, episodeId, 2)
+    fetchAdjacentEpisodeVideos(org, dataset, episodeId, 2)
       .then((adjacentVideos) => {
         for (const ep of adjacentVideos) {
           for (const v of ep.videosInfo) {
             const link = document.createElement("link");
-            link.rel = "preload";
-            link.as = "video";
+            link.rel = "prefetch";
             link.href = v.url;
             document.head.appendChild(link);
             links.push(link);
@@ -603,6 +613,7 @@ function EpisodeViewerInner({
                 <a
                   href="https://github.com/huggingface/lerobot"
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="block"
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -614,14 +625,20 @@ function EpisodeViewerInner({
                 </a>
 
                 <div>
-                  <a
-                    href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
-                    target="_blank"
-                  >
-                    <p className="text-lg font-semibold">
-                      {datasetInfo.repoId}
+                  {isLocalDatasetId(datasetInfo.repoId) ? (
+                    <p className="text-lg font-semibold break-all">
+                      {getDatasetDisplayName(datasetInfo.repoId)}
                     </p>
-                  </a>
+                  ) : (
+                    <a
+                      href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
+                      target="_blank"
+                    >
+                      <p className="text-lg font-semibold">
+                        {datasetInfo.repoId}
+                      </p>
+                    </a>
+                  )}
 
                   <p className="font-mono text-lg font-semibold">
                     episode {episodeId}
