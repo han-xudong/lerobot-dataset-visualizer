@@ -30,7 +30,7 @@ function InfoToggle({ children }: { children: React.ReactNode }) {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="brand-focus-ring glass-chip shrink-0 rounded-full p-1 text-white/50 transition-colors hover:text-white"
+        className="brand-focus-ring brand-control-button shrink-0 rounded-full p-1 transition-colors"
         title="Toggle description"
       >
         <svg
@@ -70,7 +70,7 @@ function FullscreenWrapper({ children }: { children: React.ReactNode }) {
     <div className="relative">
       <button
         onClick={() => setFs((v) => !v)}
-        className="brand-focus-ring glass-chip absolute right-3 top-3 z-10 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/12 hover:text-white"
+        className="brand-focus-ring brand-control-button absolute right-3 top-3 z-10 rounded-full p-1.5 transition-colors"
         title={fs ? "Exit fullscreen" : "Fullscreen"}
       >
         <svg
@@ -102,10 +102,10 @@ function FullscreenWrapper({ children }: { children: React.ReactNode }) {
         </svg>
       </button>
       {fs ? (
-        <div className="fixed inset-0 z-50 overflow-auto bg-black/92 p-6 backdrop-blur-2xl">
+        <div className="brand-overlay-backdrop fixed inset-0 z-50 overflow-auto p-6">
           <button
             onClick={() => setFs(false)}
-            className="brand-focus-ring glass-chip fixed right-4 top-4 z-50 rounded-full p-2 text-white/70 transition-colors hover:bg-white/12 hover:text-white"
+            className="brand-focus-ring brand-control-button fixed right-4 top-4 z-50 rounded-full p-2 transition-colors"
             title="Exit fullscreen (Esc)"
           >
             <svg
@@ -145,7 +145,7 @@ function FlagBtn({ id }: { id: number }) {
     <button
       onClick={() => toggle(id)}
       title={flagged ? "Unflag episode" : "Flag for review"}
-      className={`brand-focus-ring rounded p-0.5 transition-colors ${flagged ? "text-white" : "text-white/35 hover:text-white/75"}`}
+      className={`brand-focus-ring rounded-full p-1 transition-colors ${flagged ? "brand-control-button-active" : "brand-control-button"}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -170,7 +170,7 @@ function FlagAllBtn({ ids, label }: { ids: number[]; label?: string }) {
   return (
     <button
       onClick={() => addMany(ids)}
-      className="text-xs text-white/45 hover:text-white transition-colors flex items-center gap-1"
+      className="brand-focus-ring brand-control-button rounded-full px-2.5 py-1 text-xs transition-colors flex items-center gap-1"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -326,7 +326,7 @@ function AutocorrelationSection({
   }, [chartData, shortKeys]);
 
   if (shortKeys.length === 0)
-    return <p className="text-white/45 italic">No action columns found.</p>;
+    return <p className="text-ink-soft italic">No action columns found.</p>;
 
   return (
     <div className="glass-panel rounded-[28px] p-5 space-y-4">
@@ -334,22 +334,22 @@ function AutocorrelationSection({
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-white">
             Action Autocorrelation
-            <span className="ml-2 text-xs font-normal text-white/45">
+            <span className="text-ink-soft ml-2 text-xs font-normal">
               {numEpisodesLabel}
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-white/65">
+            <p className="text-ink-muted text-xs">
               Shows how correlated each action dimension is with itself over
               increasing time lags. Where autocorrelation drops below 0.5
               suggests a{" "}
-              <span className="font-medium text-white">
+              <span className="text-ink-strong font-medium">
                 natural action chunk boundary
               </span>{" "}
               — actions beyond this lag are essentially independent, so
               executing them open-loop offers diminishing returns.
               <br />
-              <span className="text-white/45">
+              <span className="text-ink-soft">
                 Grounded in the theoretical result that chunk length should
                 scale logarithmically with system stability constants (
                 <a
@@ -368,7 +368,7 @@ function AutocorrelationSection({
       </div>
 
       {suggestedChunk && (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/16 bg-white/[0.06] px-4 py-2.5 backdrop-blur-md">
+        <div className="brand-inline-surface flex items-center gap-3 rounded-2xl px-4 py-2.5">
           <span className="text-lg font-bold tabular-nums text-white">
             {suggestedChunk}
           </span>
@@ -377,7 +377,7 @@ function AutocorrelationSection({
               Suggested chunk length: {suggestedChunk} steps (
               {(suggestedChunk / fps).toFixed(2)}s)
             </p>
-            <p className="text-xs text-white/55">
+            <p className="text-ink-muted text-xs">
               Median lag where autocorrelation drops below 0.5 across action
               dimensions
             </p>
@@ -452,7 +452,7 @@ function AutocorrelationSection({
               className="w-3 h-[3px] rounded-full shrink-0"
               style={{ background: COLORS[i % COLORS.length] }}
             />
-            <span className="text-xs text-white/58">{name}</span>
+            <span className="text-ink-muted text-xs">{name}</span>
           </div>
         ))}
       </div>
@@ -633,7 +633,7 @@ function ActionVelocitySection({
 
   if (stats.length === 0)
     return (
-      <p className="text-white/45 italic">
+      <p className="text-ink-soft italic">
         No action data for velocity analysis.
       </p>
     );
@@ -644,14 +644,14 @@ function ActionVelocitySection({
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-white">
             Action Velocity (Δa) — Smoothness Proxy
-            <span className="ml-2 text-xs font-normal text-white/45">
+            <span className="text-ink-soft ml-2 text-xs font-normal">
               {isAgg
                 ? `(${numEpisodes} episodes sampled)`
                 : "(current episode)"}
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-white/65">
+            <p className="text-ink-muted text-xs">
               Shows the distribution of frame-to-frame action changes (Δa = a
               <sub>t+1</sub> − a<sub>t</sub>) for each dimension. A{" "}
               <span className="text-white">tight distribution around zero</span>{" "}
@@ -661,7 +661,7 @@ function ActionVelocitySection({
               indicate jerky demonstrations, suggesting shorter chunks and
               potentially beneficial noise injection.
               <br />
-              <span className="text-white/45">
+              <span className="text-ink-soft">
                 Relates to the Lipschitz constant L<sub>π</sub> and smoothness C
                 <sub>π</sub> in{" "}
                 <a
@@ -741,7 +741,7 @@ function ActionVelocitySection({
                   );
                 })}
               </svg>
-              <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
+              <div className="brand-progress-track h-1 w-full overflow-hidden rounded-full">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -769,12 +769,12 @@ function ActionVelocitySection({
               {insight.verdict.label}
             </span>
           </p>
-          <ul className="list-inside list-disc space-y-0.5 text-xs text-white/65">
+          <ul className="text-ink-muted list-inside list-disc space-y-0.5 text-xs">
             {insight.lines.map((l, i) => (
               <li key={i}>{l}</li>
             ))}
           </ul>
-          <p className="pt-1 text-xs text-white/45">{insight.tip}</p>
+          <p className="text-ink-soft pt-1 text-xs">{insight.tip}</p>
         </div>
       )}
 
@@ -794,7 +794,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-white">
           Most Jerky Episodes{" "}
-          <span className="text-xs font-normal text-white/40">
+          <span className="text-ink-faint text-xs font-normal">
             sorted by mean |Δa|
           </span>
         </p>
@@ -803,7 +803,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
           {episodes.length > 15 && (
             <button
               onClick={() => setShowAll((v) => !v)}
-              className="text-xs text-white/55 transition-colors hover:text-white"
+              className="text-ink-muted hover:text-ink-strong text-xs transition-colors"
             >
               {showAll ? "Show top 15" : `Show all ${episodes.length}`}
             </button>
@@ -813,7 +813,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
       <div className="max-h-48 overflow-y-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/10 text-white/42">
+            <tr className="text-ink-soft border-b border-white/10">
               <th className="w-5 py-1" />
               <th className="text-left py-1 pr-3">Episode</th>
               <th className="text-right py-1">Mean |Δa|</th>
@@ -823,7 +823,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
             {display.map((e) => (
               <tr
                 key={e.episodeIndex}
-                className="border-b border-white/6 text-white/78"
+                className="text-ink border-b border-white/6"
               >
                 <td className="py-1">
                   <FlagBtn id={e.episodeIndex} />
@@ -858,7 +858,7 @@ function VarianceHeatmap({
         <h3 className="mb-2 text-sm font-semibold text-white">
           Cross-Episode Action Variance
         </h3>
-        <div className="flex items-center justify-center gap-2 py-8 text-sm text-white/60">
+        <div className="text-ink-muted flex items-center justify-center gap-2 py-8 text-sm">
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
@@ -886,7 +886,7 @@ function VarianceHeatmap({
         <h3 className="mb-2 text-sm font-semibold text-white">
           Cross-Episode Action Variance
         </h3>
-        <p className="text-sm italic text-white/45">
+        <p className="text-ink-soft text-sm italic">
           Not enough episodes or no action data to compute variance.
         </p>
       </div>
@@ -924,12 +924,12 @@ function VarianceHeatmap({
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-white">
             Cross-Episode Action Variance
-            <span className="ml-2 text-xs font-normal text-white/45">
+            <span className="text-ink-soft ml-2 text-xs font-normal">
               ({numEpisodes} episodes sampled)
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-white/65">
+            <p className="text-ink-muted text-xs">
               Shows how much each action dimension varies across episodes at
               each point in time (normalized 0–100%).
               <span className="text-white"> High-variance regions</span>{" "}
@@ -939,7 +939,7 @@ function VarianceHeatmap({
               <span className="text-white/85"> Low-variance regions</span>{" "}
               indicate consistent behavior across demonstrations.
               <br />
-              <span className="text-white/45">
+              <span className="text-ink-soft">
                 Relates to the &quot;coverage&quot; discussion in{" "}
                 <a
                   href="https://arxiv.org/abs/2507.09061"
@@ -1199,25 +1199,25 @@ function SpeedVarianceSection({
         </div>
         <div className="flex flex-col gap-2 text-xs shrink-0 min-w-[120px]">
           <div>
-            <span className="text-white/40">Mean</span>{" "}
+            <span className="text-ink-faint">Mean</span>{" "}
             <span className="ml-1 tabular-nums text-white">
               {mean.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-white/40">Median</span>{" "}
+            <span className="text-ink-faint">Median</span>{" "}
             <span className="ml-1 tabular-nums text-white">
               {median.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-white/40">Std</span>{" "}
+            <span className="text-ink-faint">Std</span>{" "}
             <span className="ml-1 tabular-nums text-white">
               {std.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-white/40">CV</span>
+            <span className="text-ink-faint">CV</span>
             <span className={`tabular-nums ml-1 font-bold ${verdict.color}`}>
               {cv.toFixed(3)}
             </span>
@@ -1229,7 +1229,7 @@ function SpeedVarianceSection({
         <p className="text-sm font-medium text-white">
           Verdict: <span className={verdict.color}>{verdict.label}</span>
         </p>
-        <p className="text-xs text-white/62">{verdict.tip}</p>
+        <p className="text-ink-muted text-xs">{verdict.tip}</p>
       </div>
     </div>
   );
@@ -1398,12 +1398,12 @@ function StateActionAlignmentSection({
         <div className="flex items-center gap-2">
           <h3 className="text-sm font-semibold text-white">
             State–Action Temporal Alignment
-            <span className="ml-2 text-xs font-normal text-white/45">
+            <span className="text-ink-soft ml-2 text-xs font-normal">
               ({scopeLabel}, {numPairs} matched pair{numPairs !== 1 ? "s" : ""})
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-white/65">
+            <p className="text-ink-muted text-xs">
               Per-dimension cross-correlation between Δaction<sub>d</sub>(t) and
               Δstate<sub>d</sub>(t+lag), aggregated as
               <span className="text-white"> max</span>,{" "}
@@ -1414,7 +1414,7 @@ function StateActionAlignmentSection({
               control delay — the time between when an action is commanded and
               when the corresponding state changes.
               <br />
-              <span className="text-white/45">
+              <span className="text-ink-soft">
                 Central to ACT (
                 <a
                   href="https://arxiv.org/abs/2304.13705"
@@ -1452,7 +1452,7 @@ function StateActionAlignmentSection({
       </div>
 
       {meanPeakLag !== 0 && (
-        <div className="flex items-center gap-3 rounded-2xl border border-white/16 bg-white/[0.06] px-4 py-2.5 backdrop-blur-md">
+        <div className="brand-inline-surface flex items-center gap-3 rounded-2xl px-4 py-2.5">
           <span className="text-lg font-bold tabular-nums text-white">
             {meanPeakLag}
           </span>
@@ -1462,7 +1462,7 @@ function StateActionAlignmentSection({
               {Math.abs(meanPeakLag) !== 1 ? "s" : ""} (
               {(meanPeakLag / fps).toFixed(3)}s)
             </p>
-            <p className="text-xs text-white/55">
+            <p className="text-ink-muted text-xs">
               {meanPeakLag > 0
                 ? `State changes lag behind actions by ~${meanPeakLag} frames on average. Consider aligning action[t] with state[t+${meanPeakLag}].`
                 : `Actions lag behind state changes by ~${-meanPeakLag} frames on average (predictive actions).`}
@@ -1547,19 +1547,19 @@ function StateActionAlignmentSection({
       <div className="flex flex-wrap gap-x-4 gap-y-1 px-1">
         <div className="flex items-center gap-1.5">
           <span className="h-[3px] w-3 shrink-0 rounded-full bg-white" />
-          <span className="text-xs text-white/65">
+          <span className="text-ink-muted text-xs">
             max (peak: lag {maxPeakLag}, r={maxPeakCorr.toFixed(3)})
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-[3px] w-3 shrink-0 rounded-full bg-zinc-400" />
-          <span className="text-xs text-white/65">
+          <span className="text-ink-muted text-xs">
             mean (peak: lag {meanPeakLag}, r={meanPeakCorr.toFixed(3)})
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="h-[3px] w-3 shrink-0 rounded-full bg-zinc-700" />
-          <span className="text-xs text-white/65">
+          <span className="text-ink-muted text-xs">
             min (peak: lag {minPeakLag}, r={minPeakCorr.toFixed(3)})
           </span>
         </div>
@@ -1597,20 +1597,20 @@ function ActionInsightsPanel({
     <div className="mx-auto max-w-5xl space-y-8 py-2">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <p className="mb-2 text-[0.72rem] uppercase tracking-[0.28em] text-white/38">
+          <p className="text-ink-faint mb-2 text-[0.72rem] uppercase tracking-[0.28em]">
             Motion Diagnostics
           </p>
           <h2 className="text-xl font-bold text-white md:text-2xl">
             Action Insights
           </h2>
-          <p className="mt-1 text-sm text-white/58">
+          <p className="text-ink-muted mt-1 text-sm">
             Data-driven analysis to guide action chunking, data quality
             assessment, and training configuration.
           </p>
         </div>
         <div className="glass-chip flex shrink-0 items-center gap-3 rounded-full px-4 py-2">
           <span
-            className={`text-sm ${mode === "episode" ? "font-medium text-white" : "text-white/40"}`}
+            className={`text-sm ${mode === "episode" ? "text-ink-strong font-medium" : "text-ink-faint"}`}
           >
             Current Episode
           </span>
@@ -1618,15 +1618,15 @@ function ActionInsightsPanel({
             onClick={() =>
               setMode((m) => (m === "episode" ? "dataset" : "episode"))
             }
-            className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${mode === "dataset" ? "bg-gradient-to-r from-white to-zinc-500" : "bg-white/18"}`}
+            className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${mode === "dataset" ? "brand-toggle-track-active" : "brand-toggle-track"}`}
             aria-label="Toggle episode/dataset scope"
           >
             <span
-              className={`inline-block w-3.5 h-3.5 bg-white rounded-full transition-transform ${mode === "dataset" ? "translate-x-[18px]" : "translate-x-[3px]"}`}
+              className={`inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform ${mode === "dataset" ? "translate-x-[18px]" : "translate-x-[3px]"}`}
             />
           </button>
           <span
-            className={`text-sm ${mode === "dataset" ? "font-medium text-white" : "text-white/40"}`}
+            className={`text-sm ${mode === "dataset" ? "text-ink-strong font-medium" : "text-ink-faint"}`}
           >
             All Episodes
             {crossEpisodeData ? ` (${crossEpisodeData.numEpisodes})` : ""}

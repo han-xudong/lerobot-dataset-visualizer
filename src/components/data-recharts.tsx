@@ -39,6 +39,7 @@ const CHART_COLORS = [
 
 const ACTION_SERIES_COLOR = "#eab308";
 const OBSERVATION_SERIES_COLOR = "#3b82f6";
+const MIXED_GROUP_COLOR = "#a1a1aa";
 
 function getSeriesColor(seriesName: string, fallbackIndex: number): string {
   const lower = seriesName.toLowerCase();
@@ -52,6 +53,29 @@ function getSeriesColor(seriesName: string, fallbackIndex: number): string {
   }
 
   return CHART_COLORS[fallbackIndex % CHART_COLORS.length];
+}
+
+function getGroupColor(
+  groupName: string,
+  children: string[] | undefined,
+  fallbackIndex: number,
+): string {
+  if (!children || children.length === 0) {
+    return getSeriesColor(groupName, fallbackIndex);
+  }
+
+  const hasAction = children.some((child) =>
+    child.toLowerCase().includes("action"),
+  );
+  const hasObservation = children.some((child) =>
+    child.toLowerCase().includes("observation"),
+  );
+
+  if (hasAction && hasObservation) {
+    return MIXED_GROUP_COLOR;
+  }
+
+  return getSeriesColor(groupName, fallbackIndex);
 }
 
 function mergeGroups(data: ChartRow[][]): ChartRow[] {
@@ -98,10 +122,10 @@ export const DataRecharts = React.memo(
           <div className="flex justify-end mb-2">
             <button
               onClick={() => setExpanded((v) => !v)}
-              className={`text-xs px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+              className={`brand-focus-ring rounded-full px-2.5 py-1 text-xs transition-colors flex items-center gap-1.5 ${
                 expanded
-                  ? "bg-white/14 text-white border border-white/22"
-                  : "glass-chip text-white/55 hover:text-white"
+                  ? "brand-control-button-active"
+                  : "brand-control-button"
               }`}
             >
               <svg
@@ -240,7 +264,7 @@ const SingleDataGraph = React.memo(
       const allGroups = [...Object.keys(grouped), ...singleList];
       const colorMap: Record<string, string> = {};
       allGroups.forEach((group, idx) => {
-        colorMap[group] = getSeriesColor(group, idx);
+        colorMap[group] = getGroupColor(group, grouped[group], idx);
       });
       const perKeyColorMap: Record<string, string> = {};
       dataKeys.forEach((key, idx) => {

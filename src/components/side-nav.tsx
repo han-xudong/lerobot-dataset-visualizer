@@ -8,7 +8,6 @@ import type { DatasetDisplayInfo } from "@/app/[org]/[dataset]/[episode]/fetch-d
 
 const EPISODE_ROW_HEIGHT_FALLBACK = 32;
 const LIST_VERTICAL_GAP = 2;
-const NAV_VERTICAL_BUFFER = 24;
 
 interface SidebarProps {
   datasetInfo: DatasetDisplayInfo;
@@ -56,24 +55,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           LIST_VERTICAL_GAP
         : EPISODE_ROW_HEIGHT_FALLBACK;
 
-      const occupiedHeight =
-        (headerRef.current?.offsetHeight ?? 0) +
-        (rangeRef.current?.offsetHeight ?? 0) +
-        (footerRef.current?.offsetHeight ?? 0) +
-        NAV_VERTICAL_BUFFER;
-
-      const availableHeight = Math.max(0, nav.clientHeight - occupiedHeight);
+      const availableHeight = Math.max(0, viewport.clientHeight);
       if (availableHeight <= 0) return;
 
       const maxItems = Math.max(1, displayEpisodes.length);
-      let nextPageSize = 1;
-
-      for (let itemCount = 1; itemCount <= maxItems; itemCount += 1) {
-        if (itemCount * measuredRowHeight > availableHeight) {
-          break;
-        }
-        nextPageSize = itemCount;
-      }
+      const nextPageSize = Math.max(
+        1,
+        Math.min(
+          maxItems,
+          Math.floor((availableHeight + LIST_VERTICAL_GAP) / measuredRowHeight),
+        ),
+      );
 
       setPageSize((prev) => (prev === nextPageSize ? prev : nextPageSize));
     };
@@ -137,35 +129,33 @@ const Sidebar: React.FC<SidebarProps> = ({
       >
         <div
           ref={headerRef}
-          className="grid grid-cols-1 gap-2 text-xs text-white/80"
+          className="text-ink grid grid-cols-1 gap-2 text-xs"
         >
           <div className="glass-chip rounded-2xl px-3 py-2">
-            <span className="block uppercase tracking-[0.2em] text-[0.65rem] text-white/40">
+            <span className="text-ink-faint block text-[0.65rem] uppercase tracking-[0.2em]">
               Frames
             </span>
-            <span className="mt-1 block text-base font-semibold tabular-nums text-white">
+            <span className="text-ink-strong mt-1 block text-base font-semibold tabular-nums">
               {datasetInfo.total_frames.toLocaleString()}
             </span>
           </div>
           <div className="glass-chip rounded-2xl px-3 py-2">
-            <span className="block uppercase tracking-[0.2em] text-[0.65rem] text-white/40">
+            <span className="text-ink-faint block text-[0.65rem] uppercase tracking-[0.2em]">
               Episodes
             </span>
-            <span className="mt-1 block text-base font-semibold tabular-nums text-white">
+            <span className="text-ink-strong mt-1 block text-base font-semibold tabular-nums">
               {datasetInfo.total_episodes.toLocaleString()}
             </span>
           </div>
         </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-white">Episodes</p>
+          <p className="text-ink-strong text-sm font-semibold">Episodes</p>
           {count > 0 && (
             <button
               onClick={() => onShowFlaggedOnlyChange(!showFlaggedOnly)}
               className={`brand-focus-ring text-xs px-2 py-1 rounded-full transition-colors ${
-                showFlaggedOnly
-                  ? "bg-white/14 text-white border border-white/24"
-                  : "glass-chip text-white/55 hover:text-white"
+                showFlaggedOnly ? "brand-pill-active" : "brand-pill-ghost"
               }`}
             >
               Flagged ({count})
@@ -175,14 +165,14 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <div
           ref={rangeRef}
-          className="mt-4 flex items-center justify-between gap-2 text-[0.7rem] uppercase tracking-[0.22em] text-white/38"
+          className="text-ink-faint mt-4 flex items-center justify-between gap-2 text-[0.7rem] uppercase tracking-[0.22em]"
         >
           <span>
             {pageEpisodes.length > 0
               ? `${pageStartEpisode}-${pageEndEpisode}`
               : "No episodes"}
           </span>
-          <span className="font-mono text-white/56">
+          <span className="text-ink-soft font-mono">
             {pageEpisodes.length}/{displayEpisodes.length}
           </span>
         </div>
@@ -201,14 +191,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {onEpisodeSelect ? (
                     <button
                       onClick={() => onEpisodeSelect(episode)}
-                      className={`brand-focus-ring rounded-full px-2 py-1 text-left cursor-pointer transition-colors ${episode === episodeId ? "bg-white/12 font-bold text-white border border-white/18" : "text-white/70 hover:bg-white/6 hover:text-white"}`}
+                      className={`brand-focus-ring rounded-full px-2 py-1 text-left cursor-pointer transition-colors ${episode === episodeId ? "brand-pill-active font-bold" : "brand-pill-ghost border-transparent"}`}
                     >
                       Episode {episode}
                     </button>
                   ) : (
                     <Link
                       href={`./episode_${episode}`}
-                      className={`brand-focus-ring rounded-full px-2 py-1 transition-colors ${episode === episodeId ? "bg-white/12 font-bold text-white border border-white/18" : "text-white/70 hover:bg-white/6 hover:text-white"}`}
+                      className={`brand-focus-ring rounded-full px-2 py-1 transition-colors ${episode === episodeId ? "brand-pill-active font-bold" : "brand-pill-ghost border-transparent"}`}
                     >
                       Episode {episode}
                     </Link>
@@ -218,7 +208,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     className={`brand-focus-ring text-xs leading-none px-1 py-0.5 rounded transition-colors ${
                       flagged.has(episode)
                         ? "text-white hover:text-white/85"
-                        : "text-white/30 hover:text-white/70"
+                        : "text-ink-faint hover:text-white/70"
                     }`}
                     title={flagged.has(episode) ? "Unflag" : "Flag"}
                     aria-label={
@@ -235,7 +225,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         {totalPages > 1 && (
           <div ref={footerRef} className="mt-3 border-t border-white/8 pt-3">
-            <div className="flex items-center justify-between text-xs text-white/55">
+            <div className="text-ink-soft flex items-center justify-between text-xs">
               <span className="font-mono">
                 Page {currentPage} / {totalPages}
               </span>
@@ -244,7 +234,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="mt-2 flex items-center text-xs">
               <button
                 onClick={prevPage}
-                className={`brand-focus-ring mr-2 rounded-full px-3 py-1.5 glass-chip ${
+                className={`brand-focus-ring brand-control-button mr-2 rounded-full px-3 py-1.5 ${
                   currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
                 }`}
                 disabled={currentPage === 1}
@@ -253,7 +243,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
               <button
                 onClick={nextPage}
-                className={`brand-focus-ring rounded-full px-3 py-1.5 glass-chip ${
+                className={`brand-focus-ring brand-control-button rounded-full px-3 py-1.5 ${
                   currentPage === totalPages
                     ? "cursor-not-allowed opacity-50"
                     : ""
@@ -268,7 +258,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </nav>
 
       <button
-        className="brand-focus-ring mx-2 flex items-center rounded-full bg-white/8 px-2 py-3 opacity-70 hover:opacity-100 md:hidden"
+        className="brand-focus-ring brand-sidebar-handle mx-2 flex items-center rounded-full px-2 py-3 opacity-70 transition-opacity hover:opacity-100 md:hidden"
         onClick={() => setMobileVisible((prev) => !prev)}
         title="Toggle sidebar"
         aria-label="Toggle episode sidebar"

@@ -23,7 +23,7 @@ function FlagBtn({ id }: { id: number }) {
     <button
       onClick={() => toggle(id)}
       title={flagged ? "Unflag episode" : "Flag for review"}
-      className={`brand-focus-ring rounded p-0.5 transition-colors ${flagged ? "text-white" : "text-white/35 hover:text-white/75"}`}
+      className={`brand-focus-ring rounded-full p-1 transition-colors ${flagged ? "brand-control-button-active" : "brand-control-button"}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -48,7 +48,7 @@ function FlagAllBtn({ ids, label }: { ids: number[]; label?: string }) {
   return (
     <button
       onClick={() => addMany(ids)}
-      className="text-xs text-white/45 hover:text-white transition-colors flex items-center gap-1"
+      className="brand-focus-ring brand-control-button rounded-full px-2.5 py-1 text-xs transition-colors flex items-center gap-1"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,7 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
         </h3>
         <FlagAllBtn ids={episodes.map((e) => e.episodeIndex)} />
       </div>
-      <p className="text-xs text-white/62">
+      <p className="text-ink-muted text-xs">
         Episodes with the lowest average action change per frame. Very low
         values may indicate the robot was standing still or the episode was
         recorded incorrectly.
@@ -98,11 +98,11 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
             className="glass-chip rounded-2xl px-3 py-2 flex items-center gap-3"
           >
             <FlagBtn id={ep.episodeIndex} />
-            <span className="shrink-0 text-xs font-medium text-white/82">
+            <span className="text-ink shrink-0 text-xs font-medium">
               ep {ep.episodeIndex}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
+              <div className="brand-progress-track h-1.5 overflow-hidden rounded-full">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -117,7 +117,7 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
                 />
               </div>
             </div>
-            <span className="shrink-0 text-xs tabular-nums text-white/42">
+            <span className="text-ink-faint shrink-0 text-xs tabular-nums">
               {ep.totalMovement.toFixed(2)}
             </span>
           </div>
@@ -164,14 +164,14 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
       </h3>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-white/55">
+        <div className="text-ink-soft flex items-center justify-between text-xs">
           <span className="tabular-nums">{rangeMin.toFixed(1)}s</span>
           <span className="tabular-nums">{rangeMax.toFixed(1)}s</span>
         </div>
         <div className="relative h-5">
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 rounded bg-white/10" />
+          <div className="brand-progress-track absolute top-1/2 left-0 right-0 h-1 -translate-y-1/2 rounded" />
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-1 rounded bg-white"
+            className="brand-scrubber-fill absolute top-1/2 -translate-y-1/2 h-1 rounded"
             style={{
               left: `${((rangeMin - globalMin) / (globalMax - globalMin || 1)) * 100}%`,
               right: `${100 - ((rangeMax - globalMin) / (globalMax - globalMin || 1)) * 100}%`,
@@ -188,7 +188,7 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
             onChange={(e) =>
               setRangeMin(Math.min(Number(e.target.value), rangeMax))
             }
-            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+            className="brand-scrubber-dual absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
           />
           <input
             type="range"
@@ -201,21 +201,21 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
             onChange={(e) =>
               setRangeMax(Math.max(Number(e.target.value), rangeMin))
             }
-            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+            className="brand-scrubber-dual absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-moz-range-thumb]:pointer-events-auto"
           />
         </div>
       </div>
 
       {rangeChanged && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-white/55">
+          <span className="text-ink-soft text-xs">
             {outsideIds.length} episode{outsideIds.length !== 1 ? "s" : ""}{" "}
             outside range
           </span>
           {outsideIds.length > 0 && (
             <button
               onClick={() => addMany(outsideIds)}
-              className="text-xs bg-white/14 text-white border border-white/24 rounded-full px-2.5 py-1 hover:bg-white/18 transition-colors"
+              className="brand-focus-ring brand-control-button-active rounded-full px-2.5 py-1 text-xs transition-colors"
             >
               Flag {outsideIds.length} outside range
             </button>

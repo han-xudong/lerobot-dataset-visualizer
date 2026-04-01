@@ -31,16 +31,16 @@ export default function UrdfPlaybackBar({
       {/* Play/Pause */}
       <button
         onClick={onPlayPause}
-        className="brand-focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-white to-zinc-300 text-black transition-colors shadow-[0_10px_30px_rgba(255,255,255,0.12)] hover:from-zinc-100 hover:to-zinc-300"
+        className="brand-focus-ring brand-control-button-active flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors"
       >
         {playing ? (
           <svg width="12" height="14" viewBox="0 0 12 14">
-            <rect x="1" y="1" width="3" height="12" fill="white" />
-            <rect x="8" y="1" width="3" height="12" fill="white" />
+            <rect x="1" y="1" width="3" height="12" fill="currentColor" />
+            <rect x="8" y="1" width="3" height="12" fill="currentColor" />
           </svg>
         ) : (
           <svg width="12" height="14" viewBox="0 0 12 14">
-            <polygon points="2,1 11,7 2,13" fill="white" />
+            <polygon points="2,1 11,7 2,13" fill="currentColor" />
           </svg>
         )}
       </button>
@@ -49,9 +49,7 @@ export default function UrdfPlaybackBar({
       <button
         onClick={onTrailToggle}
         className={`brand-focus-ring h-8 shrink-0 rounded-full px-3 text-xs transition-colors ${
-          trailEnabled
-            ? "border border-white/20 bg-white/14 text-white"
-            : "glass-chip text-white/55"
+          trailEnabled ? "brand-control-button-active" : "brand-control-button"
         }`}
         title={trailEnabled ? "Hide trail" : "Show trail"}
       >
@@ -67,19 +65,19 @@ export default function UrdfPlaybackBar({
         onChange={onFrameChange}
         title="URDF timeline"
         aria-label="URDF timeline"
-        className="brand-focus-ring h-1.5 flex-1 cursor-pointer accent-white"
+        className="brand-focus-ring brand-scrubber h-1.5 flex-1 cursor-pointer"
       />
-      <span className="w-28 shrink-0 text-right text-xs tabular-nums text-white/70">
+      <span className="text-ink-muted w-28 shrink-0 text-right text-xs tabular-nums">
         {currentTime}s / {totalTime}s
       </span>
-      <span className="w-20 shrink-0 text-right text-xs tabular-nums text-white/40">
+      <span className="text-ink-soft w-20 shrink-0 text-right text-xs tabular-nums">
         F {frame}/{Math.max(totalFrames - 1, 0)}
       </span>
 
       {/* Keyboard hints */}
-      <div className="ml-2 hidden shrink-0 select-none flex-col gap-y-0.5 text-xs text-white/45 md:flex">
+      <div className="text-ink-soft ml-2 hidden shrink-0 select-none flex-col gap-y-0.5 text-xs md:flex">
         <p>
-          <span className="glass-chip rounded-full px-1.5 py-0.5 text-xs text-white/70">
+          <span className="glass-chip text-ink rounded-full px-1.5 py-0.5 text-xs">
             Space
           </span>{" "}
           pause/unpause

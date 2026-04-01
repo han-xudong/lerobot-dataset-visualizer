@@ -220,20 +220,20 @@ export const SimpleVideosPlayer = ({
       {hiddenVideos.length > 0 && (
         <div className="relative mb-4">
           <button
-            className="brand-focus-ring glass-chip flex items-center gap-2 rounded-full px-3 py-2 text-sm text-white/90 hover:bg-white/10"
+            className="brand-focus-ring brand-control-button flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors"
             onClick={() => setShowHiddenMenu(!showHiddenMenu)}
           >
             <FaEye /> Show Hidden Videos ({hiddenVideos.length})
           </button>
           {showHiddenMenu && (
             <div className="glass-panel absolute left-0 z-50 mt-2 w-max rounded-2xl p-2 shadow-lg">
-              <div className="mb-2 text-xs text-white/65">
+              <div className="text-ink-muted mb-2 text-xs">
                 Restore hidden videos:
               </div>
               {hiddenVideos.map((filename) => (
                 <button
                   key={filename}
-                  className="brand-focus-ring block w-full rounded-xl px-2 py-1 text-left text-slate-100 transition-colors hover:bg-white/8"
+                  className="brand-focus-ring brand-control-list-item block w-full rounded-xl px-2 py-1 text-left transition-colors"
                   onClick={() =>
                     setHiddenVideos((prev) =>
                       prev.filter((v) => v !== filename),
@@ -265,12 +265,12 @@ export const SimpleVideosPlayer = ({
                   : "max-w-96"
               }`}
             >
-              <p className="glass-panel flex w-full items-center justify-between truncate rounded-t-[22px] px-3 py-2 text-sm text-white/80">
+              <p className="glass-panel text-ink flex w-full items-center justify-between truncate rounded-t-[22px] px-3 py-2 text-sm">
                 <span>{info.filename}</span>
                 <span className="flex gap-1">
                   <button
                     title={isEnlarged ? "Minimize" : "Enlarge"}
-                    className="brand-focus-ring ml-2 rounded-full p-1.5 text-white/75 transition-colors hover:bg-white/8 hover:text-white"
+                    className="brand-focus-ring brand-control-button ml-2 rounded-full p-1.5 transition-colors"
                     onClick={() =>
                       setEnlargedVideo(isEnlarged ? null : info.filename)
                     }
@@ -279,7 +279,7 @@ export const SimpleVideosPlayer = ({
                   </button>
                   <button
                     title="Hide Video"
-                    className="brand-focus-ring ml-1 rounded-full p-1.5 text-white/75 transition-colors hover:bg-white/8 hover:text-white"
+                    className="brand-focus-ring brand-control-button ml-1 rounded-full p-1.5 transition-colors"
                     onClick={() =>
                       setHiddenVideos((prev) => [...prev, info.filename])
                     }

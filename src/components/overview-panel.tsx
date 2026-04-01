@@ -76,10 +76,10 @@ function FrameThumbnail({
         )}
         <button
           onClick={() => toggle(info.episodeIndex)}
-          className={`brand-focus-ring absolute right-2 top-2 rounded-full p-1.5 transition-opacity ${
+          className={`brand-focus-ring absolute right-2 top-2 rounded-full p-1.5 transition-all ${
             isFlagged
-              ? "opacity-100 bg-white/14 text-white"
-              : "opacity-0 text-white/50 group-hover:opacity-100 hover:bg-white/8 hover:text-white"
+              ? "brand-control-button-active opacity-100"
+              : "brand-control-button opacity-0 group-hover:opacity-100"
           }`}
           title={isFlagged ? "Unflag episode" : "Flag episode"}
           aria-label={isFlagged ? "Unflag episode" : "Flag episode"}
@@ -101,7 +101,7 @@ function FrameThumbnail({
         </button>
       </div>
       <p
-        className={`mt-2 text-xs tabular-nums ${isFlagged ? "text-white" : "text-white/50"}`}
+        className={`mt-2 text-xs tabular-nums ${isFlagged ? "text-ink-strong" : "text-ink-soft"}`}
       >
         ep {info.episodeIndex}
         {isFlagged ? " ⚑" : ""}
@@ -182,7 +182,7 @@ export default function OverviewPanel({
         {flaggedOnly && onFlaggedOnlyChange && (
           <button
             onClick={() => onFlaggedOnlyChange(false)}
-            className="text-xs text-white/75 hover:text-white underline"
+            className="text-ink-muted text-xs underline transition-colors hover:text-white"
           >
             Show all episodes
           </button>
@@ -196,7 +196,7 @@ export default function OverviewPanel({
 
   return (
     <div className="mx-auto max-w-7xl space-y-5 py-2">
-      <p className="glass-chip rounded-2xl px-4 py-3 text-sm text-white/65">
+      <p className="glass-chip text-ink-muted rounded-2xl px-4 py-3 text-sm">
         Use first/last frame views to spot episodes with bad end states or other
         anomalies. Hover over a thumbnail and click the flag icon to mark
         episodes with wrong outcomes for review.
@@ -211,7 +211,7 @@ export default function OverviewPanel({
               value={selectedCamera}
               onChange={handleCameraChange}
               title="Select camera"
-              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 text-sm text-slate-100"
+              className="brand-focus-ring brand-control-button rounded-full px-3 py-1.5 text-sm"
             >
               {data.cameras.map((cam) => (
                 <option key={cam} value={cam}>
@@ -228,10 +228,10 @@ export default function OverviewPanel({
                 onFlaggedOnlyChange(!flaggedOnly);
                 setPage(0);
               }}
-              className={`text-xs px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
+              className={`brand-focus-ring rounded-full px-2.5 py-1 text-xs transition-colors flex items-center gap-1.5 ${
                 flaggedOnly
-                  ? "bg-white/14 text-white border border-white/24"
-                  : "glass-chip text-white/65 hover:text-white"
+                  ? "brand-control-button-active"
+                  : "brand-control-button"
               }`}
             >
               <svg
@@ -261,7 +261,7 @@ export default function OverviewPanel({
             </span>
             <button
               onClick={() => setShowLast((v) => !v)}
-              className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${showLast ? "bg-gradient-to-r from-white to-zinc-500" : "bg-white/18"}`}
+              className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${showLast ? "brand-toggle-track-active" : "brand-toggle-track"}`}
               aria-label="Toggle first/last frame"
             >
               <span
@@ -282,7 +282,7 @@ export default function OverviewPanel({
             <button
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
-              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
+              className="brand-focus-ring brand-control-button rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
             >
               ← Prev
             </button>
@@ -292,7 +292,7 @@ export default function OverviewPanel({
             <button
               disabled={page === totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
-              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
+              className="brand-focus-ring brand-control-button rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
             >
               Next →
             </button>

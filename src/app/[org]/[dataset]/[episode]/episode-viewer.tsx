@@ -497,9 +497,7 @@ function EpisodeViewerInner({
       <div className="glass-panel-strong relative z-10 mx-4 mt-4 flex shrink-0 flex-wrap items-center gap-2 rounded-[28px] px-3 py-2">
         <button
           className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-            activeTab === "episodes"
-              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+            activeTab === "episodes" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("episodes")}
         >
@@ -508,8 +506,8 @@ function EpisodeViewerInner({
         <button
           className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "statistics"
-              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+              ? "brand-pill-active"
+              : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("statistics")}
         >
@@ -517,9 +515,7 @@ function EpisodeViewerInner({
         </button>
         <button
           className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-            activeTab === "filtering"
-              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+            activeTab === "filtering" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("filtering")}
         >
@@ -527,9 +523,7 @@ function EpisodeViewerInner({
         </button>
         <button
           className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-            activeTab === "frames"
-              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+            activeTab === "frames" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("frames")}
         >
@@ -537,9 +531,7 @@ function EpisodeViewerInner({
         </button>
         <button
           className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-            activeTab === "insights"
-              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+            activeTab === "insights" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("insights")}
         >
@@ -549,9 +541,7 @@ function EpisodeViewerInner({
           datasetInfo.codebase_version >= "v3.0" && (
             <button
               className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
-                activeTab === "urdf"
-                  ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
-                  : "text-slate-300/70 hover:bg-white/6 hover:text-white"
+                activeTab === "urdf" ? "brand-pill-active" : "brand-pill-ghost"
               }`}
               onClick={() => handleTabChange("urdf")}
             >
@@ -566,7 +556,7 @@ function EpisodeViewerInner({
                 currentTheme === "dark" ? "light" : "dark",
               )
             }
-            className="brand-focus-ring inline-flex items-center justify-center rounded-full border border-white/12 bg-white/6 p-3 text-white/80 transition-all hover:bg-white/10 hover:text-white"
+            className="brand-focus-ring brand-pill-ghost inline-flex items-center justify-center rounded-full p-3 transition-all"
             title={
               theme === "dark"
                 ? "Switch to light theme"
@@ -582,7 +572,7 @@ function EpisodeViewerInner({
           </button>
           <Link
             href="/"
-            className="brand-focus-ring inline-flex items-center justify-center rounded-full border border-white/12 bg-white/6 p-3 text-white/80 transition-all hover:bg-white/10 hover:text-white"
+            className="brand-focus-ring brand-pill-ghost inline-flex items-center justify-center rounded-full p-3 transition-all"
             title="Return to home"
             aria-label="Return to home"
           >
@@ -643,26 +633,26 @@ function EpisodeViewerInner({
                       </a>
                     )}
 
-                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-200/80">
-                      <span className="glass-chip rounded-full px-3 py-1 font-mono uppercase tracking-[0.2em] text-white/80">
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="glass-chip text-ink rounded-full px-3 py-1 font-mono uppercase tracking-[0.2em]">
                         episode_{episodeId}
                       </span>
-                      <span className="glass-chip rounded-full px-3 py-1 font-mono text-white/70">
+                      <span className="glass-chip text-ink-muted rounded-full px-3 py-1 font-mono">
                         {datasetInfo.codebase_version}
                       </span>
-                      <span className="glass-chip rounded-full px-3 py-1 font-mono text-white/70">
+                      <span className="glass-chip text-ink-muted rounded-full px-3 py-1 font-mono">
                         {datasetInfo.robot_type ?? "unknown robot"}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="hidden text-right md:block">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/35">
+                  <p className="text-ink-faint text-xs uppercase tracking-[0.24em]">
                     Frames / FPS
                   </p>
                   <p className="mt-1 text-2xl font-semibold text-white">
                     {visibleEpisodeFrameCount.toLocaleString()}
-                    <span className="ml-2 text-sm font-normal text-white/50">
+                    <span className="text-ink-soft ml-2 text-sm font-normal">
                       @ {datasetInfo.fps}
                     </span>
                   </p>
@@ -680,12 +670,12 @@ function EpisodeViewerInner({
               {/* Language Instruction */}
               {task && (
                 <div className="glass-panel mb-2 rounded-[24px] p-5">
-                  <p className="text-white/88">
-                    <span className="font-semibold text-white">
+                  <p className="text-ink">
+                    <span className="text-ink-strong font-semibold">
                       Language Instruction:
                     </span>
                   </p>
-                  <div className="mt-3 text-slate-200/85">
+                  <div className="text-ink mt-3">
                     {task
                       .split("\n")
                       .map((instruction: string, index: number) => (
