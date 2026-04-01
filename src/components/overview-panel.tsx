@@ -62,7 +62,7 @@ function FrameThumbnail({
 
   return (
     <div ref={containerRef} className="flex flex-col items-center">
-      <div className="w-full aspect-video bg-slate-800 rounded overflow-hidden relative group">
+      <div className="glass-panel relative w-full overflow-hidden rounded-[22px] aspect-video group">
         {inView ? (
           <video
             ref={videoRef}
@@ -76,12 +76,13 @@ function FrameThumbnail({
         )}
         <button
           onClick={() => toggle(info.episodeIndex)}
-          className={`absolute top-1 right-1 p-1 rounded transition-opacity ${
+          className={`brand-focus-ring absolute right-2 top-2 rounded-full p-1.5 transition-opacity ${
             isFlagged
-              ? "opacity-100 text-orange-400"
-              : "opacity-0 group-hover:opacity-100 text-slate-400 hover:text-orange-400"
+              ? "opacity-100 bg-white/14 text-white"
+              : "opacity-0 text-white/50 group-hover:opacity-100 hover:bg-white/8 hover:text-white"
           }`}
           title={isFlagged ? "Unflag episode" : "Flag episode"}
+          aria-label={isFlagged ? "Unflag episode" : "Flag episode"}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -100,7 +101,7 @@ function FrameThumbnail({
         </button>
       </div>
       <p
-        className={`text-xs mt-1 tabular-nums ${isFlagged ? "text-orange-400" : "text-slate-400"}`}
+        className={`mt-2 text-xs tabular-nums ${isFlagged ? "text-white" : "text-white/50"}`}
       >
         ep {info.episodeIndex}
         {isFlagged ? " ⚑" : ""}
@@ -181,7 +182,7 @@ export default function OverviewPanel({
         {flaggedOnly && onFlaggedOnlyChange && (
           <button
             onClick={() => onFlaggedOnlyChange(false)}
-            className="text-xs text-orange-400 hover:text-orange-300 underline"
+            className="text-xs text-white/75 hover:text-white underline"
           >
             Show all episodes
           </button>
@@ -194,8 +195,8 @@ export default function OverviewPanel({
   const pageFrames = frames.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 space-y-5">
-      <p className="text-sm text-slate-500">
+    <div className="mx-auto max-w-7xl space-y-5 py-2">
+      <p className="glass-chip rounded-2xl px-4 py-3 text-sm text-white/65">
         Use first/last frame views to spot episodes with bad end states or other
         anomalies. Hover over a thumbnail and click the flag icon to mark
         episodes with wrong outcomes for review.
@@ -209,7 +210,8 @@ export default function OverviewPanel({
             <select
               value={selectedCamera}
               onChange={handleCameraChange}
-              className="bg-slate-800 text-slate-200 text-sm rounded px-3 py-1.5 border border-slate-600 focus:outline-none focus:border-orange-500"
+              title="Select camera"
+              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 text-sm text-slate-100"
             >
               {data.cameras.map((cam) => (
                 <option key={cam} value={cam}>
@@ -228,8 +230,8 @@ export default function OverviewPanel({
               }}
               className={`text-xs px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
                 flaggedOnly
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                  : "text-slate-400 hover:text-slate-200 border border-slate-700"
+                  ? "bg-white/14 text-white border border-white/24"
+                  : "glass-chip text-white/65 hover:text-white"
               }`}
             >
               <svg
@@ -259,7 +261,7 @@ export default function OverviewPanel({
             </span>
             <button
               onClick={() => setShowLast((v) => !v)}
-              className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors shrink-0 ${showLast ? "bg-orange-500" : "bg-slate-600"}`}
+              className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${showLast ? "bg-gradient-to-r from-white to-zinc-500" : "bg-white/18"}`}
               aria-label="Toggle first/last frame"
             >
               <span
@@ -280,7 +282,7 @@ export default function OverviewPanel({
             <button
               disabled={page === 0}
               onClick={() => setPage((p) => p - 1)}
-              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
             >
               ← Prev
             </button>
@@ -290,7 +292,7 @@ export default function OverviewPanel({
             <button
               disabled={page === totalPages - 1}
               onClick={() => setPage((p) => p + 1)}
-              className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="brand-focus-ring glass-chip rounded-full px-3 py-1.5 disabled:cursor-not-allowed disabled:opacity-30"
             >
               Next →
             </button>

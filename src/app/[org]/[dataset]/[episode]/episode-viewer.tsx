@@ -8,7 +8,9 @@ import {
   Suspense,
   useCallback,
 } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { FaHome, FaMoon, FaSun } from "react-icons/fa";
 import { postParentMessageWithParams } from "@/utils/postParentMessage";
 import { SimpleVideosPlayer } from "@/components/simple-videos-player";
 import DataRecharts from "@/components/data-recharts";
@@ -45,6 +47,7 @@ const ActionInsightsPanel = lazy(
   () => import("@/components/action-insights-panel"),
 );
 const FilteringPanel = lazy(() => import("@/components/filtering-panel"));
+const THEME_STORAGE_KEY = "episode-viewer-theme";
 
 type ActiveTab =
   | "episodes"
@@ -115,19 +118,40 @@ function EpisodeViewerInner({
   const {
     datasetInfo,
     episodeId,
+    currentEpisodeFrames,
     videosInfo,
     chartDataGroups,
     episodes,
     task,
   } = data;
+  const visibleEpisodeFrameCount =
+    currentEpisodeFrames ??
+    Math.max(0, Math.round(data.duration * datasetInfo.fps));
 
   const [videosReady, setVideosReady] = useState(!videosInfo.length);
   const [chartsReady, setChartsReady] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   const loadStartRef = useRef(performance.now());
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    if (storedTheme === "light" || storedTheme === "dark") {
+      setTheme(storedTheme);
+      return;
+    }
+
+    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+      setTheme("light");
+    }
+  }, []);
+
+  useEffect(() => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
   // Tab state & lazy stats
   const [activeTab, setActiveTab] = useState<ActiveTab>("episodes");
@@ -349,15 +373,6 @@ function EpisodeViewerInner({
   const [urdfEpisode, setUrdfEpisode] = useState(episodeId);
   useEffect(() => setUrdfEpisode(episodeId), [episodeId]);
 
-  // Pagination state
-  const pageSize = 100;
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(episodes.length / pageSize);
-  const paginatedEpisodes = episodes.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
   // Warm the browser cache for adjacent episodes' videos without relying on
   // unsupported preload hints for video resources.
   useEffect(() => {
@@ -442,18 +457,12 @@ function EpisodeViewerInner({
 
   // Initialize based on URL time parameter
   useEffect(() => {
-    // Initialize page based on current episode
-    const episodeIndex = episodes.indexOf(episodeId);
-    if (episodeIndex !== -1) {
-      setCurrentPage(Math.floor(episodeIndex / pageSize) + 1);
-    }
-
     // Add keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [episodes, episodeId, pageSize, handleKeyDown]);
+  }, [handleKeyDown]);
 
   // Only update URL ?t= param when the integer second changes
   const lastUrlSecondRef = useRef<number>(-1);
@@ -476,118 +485,120 @@ function EpisodeViewerInner({
     }
   }, [isPlaying, currentTime, searchParams]);
 
-  // Pagination functions
-  const nextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-950 text-gray-200">
+    <div
+      className="brand-aurora relative flex h-screen max-h-screen flex-col overflow-hidden text-slate-100"
+      data-theme={theme}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_36%,rgba(255,255,255,0.08)_72%,transparent)]" />
+
       {/* Top tab bar */}
-      <div className="flex items-center border-b border-slate-700 bg-slate-900 shrink-0">
+      <div className="glass-panel-strong relative z-10 mx-4 mt-4 flex shrink-0 flex-wrap items-center gap-2 rounded-[28px] px-3 py-2">
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "episodes"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
           }`}
           onClick={() => handleTabChange("episodes")}
         >
           Episodes
-          {activeTab === "episodes" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "statistics"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
           }`}
           onClick={() => handleTabChange("statistics")}
         >
           Statistics
-          {activeTab === "statistics" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "filtering"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
           }`}
           onClick={() => handleTabChange("filtering")}
         >
           Filtering
-          {activeTab === "filtering" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "frames"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
           }`}
           onClick={() => handleTabChange("frames")}
         >
           Frames
-          {activeTab === "frames" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "insights"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+              : "text-slate-300/70 hover:bg-white/6 hover:text-white"
           }`}
           onClick={() => handleTabChange("insights")}
         >
           Action Insights
-          {activeTab === "insights" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         {hasURDFSupport(datasetInfo.robot_type) &&
           datasetInfo.codebase_version >= "v3.0" && (
             <button
-              className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+              className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
                 activeTab === "urdf"
-                  ? "text-orange-400"
-                  : "text-slate-400 hover:text-slate-200"
+                  ? "bg-gradient-to-r from-white via-zinc-200 to-stone-400 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)]"
+                  : "text-slate-300/70 hover:bg-white/6 hover:text-white"
               }`}
               onClick={() => handleTabChange("urdf")}
             >
               3D Replay
-              {activeTab === "urdf" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-              )}
             </button>
           )}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setTheme((currentTheme) =>
+                currentTheme === "dark" ? "light" : "dark",
+              )
+            }
+            className="brand-focus-ring inline-flex items-center justify-center rounded-full border border-white/12 bg-white/6 p-3 text-white/80 transition-all hover:bg-white/10 hover:text-white"
+            title={
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme"
+            }
+            aria-label={
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme"
+            }
+          >
+            {theme === "dark" ? <FaSun size={18} /> : <FaMoon size={18} />}
+          </button>
+          <Link
+            href="/"
+            className="brand-focus-ring inline-flex items-center justify-center rounded-full border border-white/12 bg-white/6 p-3 text-white/80 transition-all hover:bg-white/10 hover:text-white"
+            title="Return to home"
+            aria-label="Return to home"
+          >
+            <FaHome size={18} />
+          </Link>
+        </div>
       </div>
 
       {/* Body: sidebar + content */}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative z-10 flex min-h-0 flex-1 gap-4 px-4 pb-4 pt-4 md:gap-5">
         {/* Sidebar — on Episodes and 3D Replay tabs */}
         {(activeTab === "episodes" || activeTab === "urdf") && (
           <Sidebar
             datasetInfo={datasetInfo}
-            paginatedEpisodes={paginatedEpisodes}
+            episodes={episodes}
             episodeId={activeTab === "urdf" ? urdfEpisode : episodeId}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            prevPage={prevPage}
-            nextPage={nextPage}
             showFlaggedOnly={sidebarFlaggedOnly}
             onShowFlaggedOnlyChange={setSidebarFlaggedOnly}
             onEpisodeSelect={
@@ -603,45 +614,57 @@ function EpisodeViewerInner({
 
         {/* Main content */}
         <div
-          className={`flex flex-col gap-4 p-4 flex-1 relative ${isLoading ? "overflow-hidden" : "overflow-y-auto"}`}
+          className={`theme-scrollbar glass-panel-strong flex flex-1 flex-col gap-5 overflow-hidden rounded-[32px] p-5 md:p-6 relative ${isLoading ? "overflow-hidden" : "overflow-y-auto"}`}
         >
           {isLoading && <Loading />}
 
           {activeTab === "episodes" && (
             <>
-              <div className="flex items-center justify-start my-4">
-                <a
-                  href="https://github.com/huggingface/lerobot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://github.com/huggingface/lerobot/raw/main/media/readme/lerobot-logo-thumbnail.png"
-                    alt="LeRobot Logo"
-                    className="w-32"
-                  />
-                </a>
-
-                <div>
-                  {isLocalDatasetId(datasetInfo.repoId) ? (
-                    <p className="text-lg font-semibold break-all">
-                      {getDatasetDisplayName(datasetInfo.repoId)}
+              <div className="glass-panel flex items-center justify-between gap-6 rounded-[28px] px-5 py-5">
+                <div className="flex min-w-0 items-center gap-5">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-[0.7rem] uppercase tracking-[0.28em] text-white/38">
+                      Episode Viewer
                     </p>
-                  ) : (
-                    <a
-                      href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
-                      target="_blank"
-                    >
-                      <p className="text-lg font-semibold">
-                        {datasetInfo.repoId}
+                    {isLocalDatasetId(datasetInfo.repoId) ? (
+                      <p className="break-all text-lg font-semibold text-white md:text-2xl">
+                        {getDatasetDisplayName(datasetInfo.repoId)}
                       </p>
-                    </a>
-                  )}
+                    ) : (
+                      <a
+                        href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition-colors hover:text-white"
+                      >
+                        <p className="text-lg font-semibold text-white md:text-2xl">
+                          {datasetInfo.repoId}
+                        </p>
+                      </a>
+                    )}
 
-                  <p className="font-mono text-lg font-semibold">
-                    episode {episodeId}
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-200/80">
+                      <span className="glass-chip rounded-full px-3 py-1 font-mono uppercase tracking-[0.2em] text-white/80">
+                        episode_{episodeId}
+                      </span>
+                      <span className="glass-chip rounded-full px-3 py-1 font-mono text-white/70">
+                        {datasetInfo.codebase_version}
+                      </span>
+                      <span className="glass-chip rounded-full px-3 py-1 font-mono text-white/70">
+                        {datasetInfo.robot_type ?? "unknown robot"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden text-right md:block">
+                  <p className="text-xs uppercase tracking-[0.24em] text-white/35">
+                    Frames / FPS
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-white">
+                    {visibleEpisodeFrameCount.toLocaleString()}
+                    <span className="ml-2 text-sm font-normal text-white/50">
+                      @ {datasetInfo.fps}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -656,13 +679,13 @@ function EpisodeViewerInner({
 
               {/* Language Instruction */}
               {task && (
-                <div className="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-600">
-                  <p className="text-slate-300">
-                    <span className="font-semibold text-slate-100">
+                <div className="glass-panel mb-2 rounded-[24px] p-5">
+                  <p className="text-white/88">
+                    <span className="font-semibold text-white">
                       Language Instruction:
                     </span>
                   </p>
-                  <div className="mt-2 text-slate-300">
+                  <div className="mt-3 text-slate-200/85">
                     {task
                       .split("\n")
                       .map((instruction: string, index: number) => (

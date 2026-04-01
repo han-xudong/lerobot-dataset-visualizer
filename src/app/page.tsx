@@ -229,10 +229,10 @@ function HomeInner() {
       </div>
 
       {/* Blur veil to soften the video and improve foreground readability */}
-      <div className="fixed inset-0 -z-0 bg-black/15 backdrop-blur-[10px]" />
+      <div className="fixed inset-0 -z-0 bg-black/35 backdrop-blur-[12px]" />
 
       {/* Gradient overlay — darker at edges, lighter at center for depth */}
-      <div className="fixed inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.35)_0%,rgba(0,0,0,0.80)_100%)]" />
+      <div className="fixed inset-0 -z-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.52)_0%,rgba(0,0,0,0.92)_100%)]" />
 
       {/* Centered Content */}
       <div className="relative z-10 h-screen flex flex-col items-center justify-center text-white text-center animate-fade-in-up px-4">

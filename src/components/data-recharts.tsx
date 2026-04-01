@@ -23,19 +23,36 @@ type DataGraphProps = {
 const SERIES_NAME_DELIMITER = " | ";
 
 const CHART_COLORS = [
-  "#f97316",
-  "#3b82f6",
-  "#22c55e",
-  "#ef4444",
-  "#a855f7",
-  "#eab308",
-  "#06b6d4",
-  "#ec4899",
-  "#14b8a6",
-  "#f59e0b",
-  "#6366f1",
-  "#84cc16",
+  "#ffffff",
+  "#d4d4d8",
+  "#a1a1aa",
+  "#71717a",
+  "#e4e4e7",
+  "#52525b",
+  "#f4f4f5",
+  "#3f3f46",
+  "#cbd5e1",
+  "#a3a3a3",
+  "#fafafa",
+  "#525252",
 ];
+
+const ACTION_SERIES_COLOR = "#eab308";
+const OBSERVATION_SERIES_COLOR = "#3b82f6";
+
+function getSeriesColor(seriesName: string, fallbackIndex: number): string {
+  const lower = seriesName.toLowerCase();
+
+  if (lower.startsWith("action") || lower.includes("action")) {
+    return ACTION_SERIES_COLOR;
+  }
+
+  if (lower.startsWith("observation") || lower.includes("observation")) {
+    return OBSERVATION_SERIES_COLOR;
+  }
+
+  return CHART_COLORS[fallbackIndex % CHART_COLORS.length];
+}
 
 function mergeGroups(data: ChartRow[][]): ChartRow[] {
   if (data.length <= 1) return data[0] ?? [];
@@ -83,8 +100,8 @@ export const DataRecharts = React.memo(
               onClick={() => setExpanded((v) => !v)}
               className={`text-xs px-2.5 py-1 rounded transition-colors flex items-center gap-1.5 ${
                 expanded
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                  : "bg-slate-800/60 text-slate-400 hover:text-slate-200 border border-slate-700/50"
+                  ? "bg-white/14 text-white border border-white/22"
+                  : "glass-chip text-white/55 hover:text-white"
               }`}
             >
               <svg
@@ -206,7 +223,7 @@ const SingleDataGraph = React.memo(
       setVisibleKeys(keys);
     }, [chartData]);
 
-    const { groups, singles, groupColorMap } = useMemo(() => {
+    const { groups, singles, groupColorMap, perKeyColorMap } = useMemo(() => {
       const grouped: Record<string, string[]> = {};
       const singleList: string[] = [];
       dataKeys.forEach((key) => {
@@ -223,9 +240,19 @@ const SingleDataGraph = React.memo(
       const allGroups = [...Object.keys(grouped), ...singleList];
       const colorMap: Record<string, string> = {};
       allGroups.forEach((group, idx) => {
-        colorMap[group] = CHART_COLORS[idx % CHART_COLORS.length];
+        colorMap[group] = getSeriesColor(group, idx);
       });
-      return { groups: grouped, singles: singleList, groupColorMap: colorMap };
+      const perKeyColorMap: Record<string, string> = {};
+      dataKeys.forEach((key, idx) => {
+        perKeyColorMap[key] = getSeriesColor(key, idx);
+      });
+
+      return {
+        groups: grouped,
+        singles: singleList,
+        groupColorMap: colorMap,
+        perKeyColorMap,
+      };
     }, [dataKeys]);
 
     // Find the closest data point to the current time for highlighting
@@ -300,13 +327,14 @@ const SingleDataGraph = React.memo(
                     className="size-3"
                     style={{ accentColor: color }}
                   />
-                  <span className="text-xs font-semibold text-slate-200">
+                  <span className="text-xs font-semibold text-white/82">
                     {group}
                   </span>
                 </label>
                 <div className="pl-5 flex flex-col gap-0.5 mt-0.5">
                   {children.map((key) => {
                     const label = key.split(SERIES_NAME_DELIMITER).pop() ?? key;
+                    const keyColor = perKeyColorMap[key] ?? color;
                     return (
                       <label
                         key={key}
@@ -317,15 +345,23 @@ const SingleDataGraph = React.memo(
                           checked={visibleKeys.includes(key)}
                           onChange={() => handleCheckboxChange(key)}
                           className="size-2.5"
-                          style={{ accentColor: color }}
+                          style={{ accentColor: keyColor }}
                         />
                         <span
-                          className={`text-xs ${visibleKeys.includes(key) ? "text-slate-300" : "text-slate-500"}`}
+                          className="text-xs transition-opacity"
+                          style={{
+                            color: keyColor,
+                            opacity: visibleKeys.includes(key) ? 0.9 : 0.38,
+                          }}
                         >
                           {label}
                         </span>
                         <span
-                          className={`text-xs font-mono tabular-nums ml-1 ${visibleKeys.includes(key) ? "text-orange-300/80" : "text-slate-600"}`}
+                          className="ml-1 text-xs font-mono tabular-nums transition-opacity"
+                          style={{
+                            color: keyColor,
+                            opacity: visibleKeys.includes(key) ? 0.78 : 0.28,
+                          }}
                         >
                           {typeof currentData[key] === "number"
                             ? currentData[key].toFixed(2)
@@ -339,7 +375,7 @@ const SingleDataGraph = React.memo(
             );
           })}
           {singles.map((key) => {
-            const color = groupColorMap[key];
+            const color = perKeyColorMap[key] ?? groupColorMap[key];
             return (
               <label
                 key={key}
@@ -353,12 +389,12 @@ const SingleDataGraph = React.memo(
                   style={{ accentColor: color }}
                 />
                 <span
-                  className={`text-xs ${visibleKeys.includes(key) ? "text-slate-200" : "text-slate-500"}`}
+                  className={`text-xs ${visibleKeys.includes(key) ? "text-white/78" : "text-white/35"}`}
                 >
                   {key}
                 </span>
                 <span
-                  className={`text-xs font-mono tabular-nums ml-1 ${visibleKeys.includes(key) ? "text-orange-300/80" : "text-slate-600"}`}
+                  className={`ml-1 text-xs font-mono tabular-nums ${visibleKeys.includes(key) ? "text-white/68" : "text-white/25"}`}
                 >
                   {typeof currentData[key] === "number"
                     ? currentData[key].toFixed(2)
@@ -385,10 +421,10 @@ const SingleDataGraph = React.memo(
     }, [groups, singles]);
 
     return (
-      <div className="w-full bg-slate-800/40 rounded-lg border border-slate-700/50 p-3">
+      <div className="glass-panel w-full rounded-[24px] p-3">
         {chartTitle && (
           <p
-            className="text-xs font-medium text-slate-300 mb-1 px-1 truncate"
+            className="mb-1 truncate px-1 text-xs font-medium text-white/72"
             title={chartTitle}
           >
             {chartTitle}
@@ -424,15 +460,15 @@ const SingleDataGraph = React.memo(
                   chartData.at(-1)?.timestamp ?? 0,
                 ]}
                 tickFormatter={(v: number) => `${v.toFixed(1)}s`}
-                stroke="#64748b"
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
+                stroke="#52525b"
+                tick={{ fontSize: 12, fill: "#a1a1aa" }}
                 minTickGap={30}
                 allowDataOverflow={true}
               />
               <YAxis
                 domain={["auto", "auto"]}
-                stroke="#64748b"
-                tick={{ fontSize: 12, fill: "#94a3b8" }}
+                stroke="#52525b"
+                tick={{ fontSize: 12, fill: "#a1a1aa" }}
                 width={55}
                 allowDataOverflow={true}
                 tickFormatter={(v: number) => {
@@ -454,7 +490,7 @@ const SingleDataGraph = React.memo(
 
               <ReferenceLine
                 x={currentTime}
-                stroke="#f97316"
+                stroke="#ffffff"
                 strokeWidth={1.5}
                 strokeOpacity={0.7}
               />
@@ -463,7 +499,7 @@ const SingleDataGraph = React.memo(
                 const group = key.includes(SERIES_NAME_DELIMITER)
                   ? key.split(SERIES_NAME_DELIMITER)[0]
                   : key;
-                const color = groupColorMap[group];
+                const color = perKeyColorMap[key] ?? groupColorMap[group];
                 let strokeDasharray: string | undefined = undefined;
                 if (groups[group] && groups[group].length > 1) {
                   const idxInGroup = groups[group].indexOf(key);

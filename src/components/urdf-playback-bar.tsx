@@ -31,7 +31,7 @@ export default function UrdfPlaybackBar({
       {/* Play/Pause */}
       <button
         onClick={onPlayPause}
-        className="w-8 h-8 flex items-center justify-center rounded bg-orange-600 hover:bg-orange-500 text-white transition-colors shrink-0"
+        className="brand-focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-white to-zinc-300 text-black transition-colors shadow-[0_10px_30px_rgba(255,255,255,0.12)] hover:from-zinc-100 hover:to-zinc-300"
       >
         {playing ? (
           <svg width="12" height="14" viewBox="0 0 12 14">
@@ -48,10 +48,10 @@ export default function UrdfPlaybackBar({
       {/* Trail toggle */}
       <button
         onClick={onTrailToggle}
-        className={`px-2 h-8 text-xs rounded transition-colors shrink-0 ${
+        className={`brand-focus-ring h-8 shrink-0 rounded-full px-3 text-xs transition-colors ${
           trailEnabled
-            ? "bg-orange-600/30 text-orange-400 border border-orange-500"
-            : "bg-slate-700 text-slate-400 border border-slate-600"
+            ? "border border-white/20 bg-white/14 text-white"
+            : "glass-chip text-white/55"
         }`}
         title={trailEnabled ? "Hide trail" : "Show trail"}
       >
@@ -65,19 +65,21 @@ export default function UrdfPlaybackBar({
         max={Math.max(totalFrames - 1, 0)}
         value={frame}
         onChange={onFrameChange}
-        className="flex-1 h-1.5 accent-orange-500 cursor-pointer"
+        title="URDF timeline"
+        aria-label="URDF timeline"
+        className="brand-focus-ring h-1.5 flex-1 cursor-pointer accent-white"
       />
-      <span className="text-xs text-slate-400 tabular-nums w-28 text-right shrink-0">
+      <span className="w-28 shrink-0 text-right text-xs tabular-nums text-white/70">
         {currentTime}s / {totalTime}s
       </span>
-      <span className="text-xs text-slate-500 tabular-nums w-20 text-right shrink-0">
+      <span className="w-20 shrink-0 text-right text-xs tabular-nums text-white/40">
         F {frame}/{Math.max(totalFrames - 1, 0)}
       </span>
 
       {/* Keyboard hints */}
-      <div className="text-xs text-slate-500 select-none hidden md:flex flex-col gap-y-0.5 ml-2 shrink-0">
+      <div className="ml-2 hidden shrink-0 select-none flex-col gap-y-0.5 text-xs text-white/45 md:flex">
         <p>
-          <span className="px-1.5 py-0.5 rounded border border-slate-600 bg-slate-800 text-slate-400 text-xs">
+          <span className="glass-chip rounded-full px-1.5 py-0.5 text-xs text-white/70">
             Space
           </span>{" "}
           pause/unpause

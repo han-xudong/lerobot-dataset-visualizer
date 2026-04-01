@@ -3,7 +3,7 @@
 export default function Loading() {
   return (
     <div
-      className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/70 z-10 text-slate-100 animate-fade-in"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_25%),rgba(2,6,23,0.78)] text-slate-100 animate-fade-in backdrop-blur-xl"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"
@@ -30,8 +30,10 @@ export default function Loading() {
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
         />
       </svg>
-      <h1 className="text-2xl font-bold mb-2">Loading...</h1>
-      <p className="text-slate-400">preparing data & videos</p>
+      <h1 className="mb-2 text-2xl font-bold text-white">Loading…</h1>
+      <p className="glass-chip rounded-full px-4 py-1.5 text-sm text-white/80">
+        Preparing data & videos
+      </p>
     </div>
   );
 }

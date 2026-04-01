@@ -48,16 +48,16 @@ const PlaybackBar: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-4 w-full max-w-4xl mx-auto sticky bottom-0 bg-slate-900/95 px-4 py-3 rounded-3xl mt-auto">
+    <div className="glass-panel-strong sticky bottom-0 mt-auto flex w-full max-w-5xl items-center gap-4 self-center rounded-[28px] px-4 py-3">
       <button
         title="Jump backward 5 seconds"
         onClick={() => setCurrentTime(Math.max(0, currentTime - 5))}
-        className="text-2xl hidden md:block"
+        className="brand-focus-ring hidden rounded-full bg-white/6 p-2.5 text-xl text-white/85 transition-colors hover:bg-white/10 hover:text-white md:block"
       >
         <FaBackward size={24} />
       </button>
       <button
-        className={`text-3xl transition-transform ${isPlaying ? "scale-90 opacity-60" : "scale-110"}`}
+        className={`brand-focus-ring rounded-full bg-gradient-to-r from-white to-zinc-300 p-3 text-slate-950 shadow-[0_10px_30px_rgba(255,255,255,0.12)] transition-transform ${isPlaying ? "scale-90 opacity-60" : "scale-110"}`}
         title="Play. Toggle with Space"
         onClick={() => setIsPlaying(true)}
         style={{ display: isPlaying ? "none" : "inline-block" }}
@@ -65,7 +65,7 @@ const PlaybackBar: React.FC = () => {
         <FaPlay size={24} />
       </button>
       <button
-        className={`text-3xl transition-transform ${!isPlaying ? "scale-90 opacity-60" : "scale-110"}`}
+        className={`brand-focus-ring rounded-full bg-white/10 p-3 text-white transition-transform ${!isPlaying ? "scale-90 opacity-60" : "scale-110"}`}
         title="Pause. Toggle with Space"
         onClick={() => setIsPlaying(false)}
         style={{ display: !isPlaying ? "none" : "inline-block" }}
@@ -75,14 +75,14 @@ const PlaybackBar: React.FC = () => {
       <button
         title="Jump forward 5 seconds"
         onClick={() => setCurrentTime(Math.min(duration, currentTime + 5))}
-        className="text-2xl hidden md:block"
+        className="brand-focus-ring hidden rounded-full bg-white/6 p-2.5 text-xl text-white/85 transition-colors hover:bg-white/10 hover:text-white md:block"
       >
         <FaForward size={24} />
       </button>
       <button
         title="Rewind from start"
         onClick={() => setCurrentTime(0)}
-        className="text-2xl hidden md:block"
+        className="brand-focus-ring hidden rounded-full bg-white/6 p-2.5 text-xl text-white/85 transition-colors hover:bg-white/10 hover:text-white md:block"
       >
         <FaUndoAlt size={24} />
       </button>
@@ -97,17 +97,17 @@ const PlaybackBar: React.FC = () => {
         onMouseUp={handleSliderMouseUp}
         onTouchStart={handleSliderMouseDown}
         onTouchEnd={handleSliderMouseUp}
-        className="flex-1 mx-2 accent-orange-500 focus:outline-none focus:ring-0"
+        className="brand-focus-ring mx-2 flex-1 accent-white"
         aria-label="Seek video"
       />
-      <span className="w-16 text-right tabular-nums text-xs text-slate-200 shrink-0">
+      <span className="shrink-0 w-20 text-right text-xs tabular-nums text-white/75">
         {Math.floor(sliderValue)} / {Math.floor(duration)}
       </span>
 
-      <div className="text-xs text-slate-300 select-none ml-8 flex-col gap-y-0.5 hidden md:flex">
+      <div className="ml-6 hidden select-none flex-col gap-y-0.5 text-xs text-white/65 md:flex">
         <p>
           <span className="inline-flex items-center gap-1 font-mono align-middle">
-            <span className="px-2 py-0.5 rounded border border-slate-400 bg-slate-800 text-slate-200 text-xs shadow-inner">
+            <span className="glass-chip rounded-full px-2 py-0.5 text-xs text-white/80 shadow-inner">
               Space
             </span>
           </span>{" "}

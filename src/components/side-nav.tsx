@@ -1,19 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useFlaggedEpisodes } from "@/context/flagged-episodes-context";
 
 import type { DatasetDisplayInfo } from "@/app/[org]/[dataset]/[episode]/fetch-data";
 
+const EPISODE_ROW_HEIGHT_FALLBACK = 32;
+const LIST_VERTICAL_GAP = 2;
+const NAV_VERTICAL_BUFFER = 24;
+
 interface SidebarProps {
   datasetInfo: DatasetDisplayInfo;
-  paginatedEpisodes: number[];
+  episodes: number[];
   episodeId: number;
-  totalPages: number;
-  currentPage: number;
-  prevPage: () => void;
-  nextPage: () => void;
   showFlaggedOnly: boolean;
   onShowFlaggedOnlyChange: (v: boolean) => void;
   onEpisodeSelect?: (ep: number) => void;
@@ -21,47 +21,151 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({
   datasetInfo,
-  paginatedEpisodes,
+  episodes,
   episodeId,
-  totalPages,
-  currentPage,
-  prevPage,
-  nextPage,
   showFlaggedOnly,
   onShowFlaggedOnlyChange,
   onEpisodeSelect,
 }) => {
   const [mobileVisible, setMobileVisible] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(1);
   const { flagged, count, toggle } = useFlaggedEpisodes();
+  const navRef = useRef<HTMLElement | null>(null);
+  const headerRef = useRef<HTMLDivElement | null>(null);
+  const rangeRef = useRef<HTMLDivElement | null>(null);
+  const footerRef = useRef<HTMLDivElement | null>(null);
+  const listViewportRef = useRef<HTMLDivElement | null>(null);
+  const listRef = useRef<HTMLUListElement | null>(null);
 
   const displayEpisodes = useMemo(() => {
-    if (!showFlaggedOnly || count === 0) return paginatedEpisodes;
+    if (!showFlaggedOnly || count === 0) return episodes;
     return [...flagged].sort((a, b) => a - b);
-  }, [paginatedEpisodes, showFlaggedOnly, flagged, count]);
+  }, [episodes, showFlaggedOnly, flagged, count]);
+
+  useEffect(() => {
+    let animationFrameId = 0;
+    const viewport = listViewportRef.current;
+    const nav = navRef.current;
+    if (!viewport || !nav) return;
+
+    const recomputePageSize = () => {
+      const firstListItem = listRef.current?.querySelector("li");
+      const measuredRowHeight = firstListItem
+        ? Math.ceil(firstListItem.getBoundingClientRect().height) +
+          LIST_VERTICAL_GAP
+        : EPISODE_ROW_HEIGHT_FALLBACK;
+
+      const occupiedHeight =
+        (headerRef.current?.offsetHeight ?? 0) +
+        (rangeRef.current?.offsetHeight ?? 0) +
+        (footerRef.current?.offsetHeight ?? 0) +
+        NAV_VERTICAL_BUFFER;
+
+      const availableHeight = Math.max(0, nav.clientHeight - occupiedHeight);
+      if (availableHeight <= 0) return;
+
+      const maxItems = Math.max(1, displayEpisodes.length);
+      let nextPageSize = 1;
+
+      for (let itemCount = 1; itemCount <= maxItems; itemCount += 1) {
+        if (itemCount * measuredRowHeight > availableHeight) {
+          break;
+        }
+        nextPageSize = itemCount;
+      }
+
+      setPageSize((prev) => (prev === nextPageSize ? prev : nextPageSize));
+    };
+
+    animationFrameId = window.requestAnimationFrame(recomputePageSize);
+
+    const observer = new ResizeObserver(recomputePageSize);
+    observer.observe(nav);
+    observer.observe(viewport);
+    if (headerRef.current) observer.observe(headerRef.current);
+    if (rangeRef.current) observer.observe(rangeRef.current);
+    if (footerRef.current) observer.observe(footerRef.current);
+
+    return () => {
+      window.cancelAnimationFrame(animationFrameId);
+      observer.disconnect();
+    };
+  }, [displayEpisodes.length, mobileVisible]);
+
+  useEffect(() => {
+    const selectedEpisodeIndex = displayEpisodes.indexOf(episodeId);
+    if (selectedEpisodeIndex !== -1) {
+      const nextPage = Math.floor(selectedEpisodeIndex / pageSize) + 1;
+      setCurrentPage((prev) => (prev === nextPage ? prev : nextPage));
+      return;
+    }
+
+    setCurrentPage(1);
+  }, [displayEpisodes, episodeId, pageSize]);
+
+  const totalPages = Math.max(1, Math.ceil(displayEpisodes.length / pageSize));
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages));
+  }, [totalPages]);
+
+  const pageStartIndex = (currentPage - 1) * pageSize;
+  const pageEpisodes = displayEpisodes.slice(
+    pageStartIndex,
+    pageStartIndex + pageSize,
+  );
+  const pageStartEpisode = pageEpisodes[0];
+  const pageEndEpisode = pageEpisodes[pageEpisodes.length - 1];
+
+  const nextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const prevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
 
   return (
-    <div className="flex z-10 shrink-0">
+    <div className="z-10 flex min-h-0 shrink-0 self-stretch">
       <nav
-        className={`shrink-0 overflow-y-auto bg-slate-900 p-5 break-words w-60 ${
+        ref={navRef}
+        className={`glass-panel-strong shrink-0 self-stretch min-h-0 break-words w-64 overflow-hidden rounded-[28px] p-5 ${
           mobileVisible ? "block" : "hidden"
-        } md:block`}
+        } md:flex md:flex-col`}
         aria-label="Sidebar navigation"
       >
-        <ul className="text-sm text-slate-300 space-y-0.5">
-          <li>Frames: {datasetInfo.total_frames.toLocaleString()}</li>
-          <li>Episodes: {datasetInfo.total_episodes.toLocaleString()}</li>
-          <li>FPS: {datasetInfo.fps}</li>
-        </ul>
+        <div
+          ref={headerRef}
+          className="grid grid-cols-1 gap-2 text-xs text-white/80"
+        >
+          <div className="glass-chip rounded-2xl px-3 py-2">
+            <span className="block uppercase tracking-[0.2em] text-[0.65rem] text-white/40">
+              Frames
+            </span>
+            <span className="mt-1 block text-base font-semibold tabular-nums text-white">
+              {datasetInfo.total_frames.toLocaleString()}
+            </span>
+          </div>
+          <div className="glass-chip rounded-2xl px-3 py-2">
+            <span className="block uppercase tracking-[0.2em] text-[0.65rem] text-white/40">
+              Episodes
+            </span>
+            <span className="mt-1 block text-base font-semibold tabular-nums text-white">
+              {datasetInfo.total_episodes.toLocaleString()}
+            </span>
+          </div>
+        </div>
 
         <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm font-semibold text-slate-200">Episodes:</p>
+          <p className="text-sm font-semibold text-white">Episodes</p>
           {count > 0 && (
             <button
               onClick={() => onShowFlaggedOnlyChange(!showFlaggedOnly)}
-              className={`text-xs px-1.5 py-0.5 rounded transition-colors ${
+              className={`brand-focus-ring text-xs px-2 py-1 rounded-full transition-colors ${
                 showFlaggedOnly
-                  ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
-                  : "text-slate-500 hover:text-slate-300 border border-slate-700"
+                  ? "bg-white/14 text-white border border-white/24"
+                  : "glass-chip text-white/55 hover:text-white"
               }`}
             >
               Flagged ({count})
@@ -69,60 +173,87 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
 
-        <div className="ml-2 mt-1">
-          <ul>
-            {displayEpisodes.map((episode) => (
-              <li
-                key={episode}
-                className="mt-0.5 font-mono text-sm flex items-center gap-1"
-              >
-                {onEpisodeSelect ? (
-                  <button
-                    onClick={() => onEpisodeSelect(episode)}
-                    className={`underline text-left cursor-pointer ${episode === episodeId ? "-ml-1 font-bold text-orange-400" : ""}`}
-                  >
-                    Episode {episode}
-                  </button>
-                ) : (
-                  <Link
-                    href={`./episode_${episode}`}
-                    className={`underline ${episode === episodeId ? "-ml-1 font-bold" : ""}`}
-                  >
-                    Episode {episode}
-                  </Link>
-                )}
-                <button
-                  onClick={() => toggle(episode)}
-                  className={`text-xs leading-none px-0.5 rounded transition-colors ${
-                    flagged.has(episode)
-                      ? "text-orange-400 hover:text-orange-300"
-                      : "text-slate-600 hover:text-slate-400"
-                  }`}
-                  title={flagged.has(episode) ? "Unflag" : "Flag"}
-                >
-                  ⚑
-                </button>
-              </li>
-            ))}
-          </ul>
+        <div
+          ref={rangeRef}
+          className="mt-4 flex items-center justify-between gap-2 text-[0.7rem] uppercase tracking-[0.22em] text-white/38"
+        >
+          <span>
+            {pageEpisodes.length > 0
+              ? `${pageStartEpisode}-${pageEndEpisode}`
+              : "No episodes"}
+          </span>
+          <span className="font-mono text-white/56">
+            {pageEpisodes.length}/{displayEpisodes.length}
+          </span>
+        </div>
 
-          {!showFlaggedOnly && totalPages > 1 && (
-            <div className="mt-3 flex items-center text-xs">
+        <div
+          ref={listViewportRef}
+          className="mt-3 min-h-0 flex-1 overflow-hidden"
+        >
+          <div className="flex h-full flex-col justify-start">
+            <ul ref={listRef} className="space-y-0.5">
+              {pageEpisodes.map((episode) => (
+                <li
+                  key={episode}
+                  className="font-mono text-sm flex items-center gap-1"
+                >
+                  {onEpisodeSelect ? (
+                    <button
+                      onClick={() => onEpisodeSelect(episode)}
+                      className={`brand-focus-ring rounded-full px-2 py-1 text-left cursor-pointer transition-colors ${episode === episodeId ? "bg-white/12 font-bold text-white border border-white/18" : "text-white/70 hover:bg-white/6 hover:text-white"}`}
+                    >
+                      Episode {episode}
+                    </button>
+                  ) : (
+                    <Link
+                      href={`./episode_${episode}`}
+                      className={`brand-focus-ring rounded-full px-2 py-1 transition-colors ${episode === episodeId ? "bg-white/12 font-bold text-white border border-white/18" : "text-white/70 hover:bg-white/6 hover:text-white"}`}
+                    >
+                      Episode {episode}
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => toggle(episode)}
+                    className={`brand-focus-ring text-xs leading-none px-1 py-0.5 rounded transition-colors ${
+                      flagged.has(episode)
+                        ? "text-white hover:text-white/85"
+                        : "text-white/30 hover:text-white/70"
+                    }`}
+                    title={flagged.has(episode) ? "Unflag" : "Flag"}
+                    aria-label={
+                      flagged.has(episode) ? "Unflag episode" : "Flag episode"
+                    }
+                  >
+                    ⚑
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {totalPages > 1 && (
+          <div ref={footerRef} className="mt-3 border-t border-white/8 pt-3">
+            <div className="flex items-center justify-between text-xs text-white/55">
+              <span className="font-mono">
+                Page {currentPage} / {totalPages}
+              </span>
+              <span className="font-mono">Fit {pageSize}</span>
+            </div>
+            <div className="mt-2 flex items-center text-xs">
               <button
                 onClick={prevPage}
-                className={`mr-2 rounded bg-slate-800 px-2 py-1 ${
+                className={`brand-focus-ring mr-2 rounded-full px-3 py-1.5 glass-chip ${
                   currentPage === 1 ? "cursor-not-allowed opacity-50" : ""
                 }`}
                 disabled={currentPage === 1}
               >
                 « Prev
               </button>
-              <span className="mr-2 font-mono">
-                {currentPage} / {totalPages}
-              </span>
               <button
                 onClick={nextPage}
-                className={`rounded bg-slate-800 px-2 py-1 ${
+                className={`brand-focus-ring rounded-full px-3 py-1.5 glass-chip ${
                   currentPage === totalPages
                     ? "cursor-not-allowed opacity-50"
                     : ""
@@ -132,16 +263,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                 Next »
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </nav>
 
       <button
-        className="mx-1 flex items-center opacity-50 hover:opacity-100 focus:outline-none focus:ring-0 md:hidden"
+        className="brand-focus-ring mx-2 flex items-center rounded-full bg-white/8 px-2 py-3 opacity-70 hover:opacity-100 md:hidden"
         onClick={() => setMobileVisible((prev) => !prev)}
         title="Toggle sidebar"
+        aria-label="Toggle episode sidebar"
       >
-        <div className="h-10 w-2 rounded-full bg-slate-500" />
+        <div className="h-10 w-2 rounded-full bg-gradient-to-b from-white to-zinc-500" />
       </button>
     </div>
   );

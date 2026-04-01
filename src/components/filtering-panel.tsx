@@ -23,7 +23,7 @@ function FlagBtn({ id }: { id: number }) {
     <button
       onClick={() => toggle(id)}
       title={flagged ? "Unflag episode" : "Flag for review"}
-      className={`p-0.5 rounded transition-colors ${flagged ? "text-orange-400" : "text-slate-600 hover:text-slate-400"}`}
+      className={`brand-focus-ring rounded p-0.5 transition-colors ${flagged ? "text-white" : "text-white/35 hover:text-white/75"}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -48,7 +48,7 @@ function FlagAllBtn({ ids, label }: { ids: number[]; label?: string }) {
   return (
     <button
       onClick={() => addMany(ids)}
-      className="text-xs text-slate-500 hover:text-orange-400 transition-colors flex items-center gap-1"
+      className="text-xs text-white/45 hover:text-white transition-colors flex items-center gap-1"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -76,14 +76,14 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
   const maxMovement = Math.max(...episodes.map((e) => e.totalMovement), 1e-10);
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-3">
+    <div className="glass-panel rounded-[28px] p-5 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-200">
+        <h3 className="text-sm font-semibold text-white">
           Lowest-Movement Episodes
         </h3>
         <FlagAllBtn ids={episodes.map((e) => e.episodeIndex)} />
       </div>
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-white/62">
         Episodes with the lowest average action change per frame. Very low
         values may indicate the robot was standing still or the episode was
         recorded incorrectly.
@@ -95,14 +95,14 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
         {episodes.map((ep) => (
           <div
             key={ep.episodeIndex}
-            className="bg-slate-900/50 rounded-md px-3 py-2 flex items-center gap-3"
+            className="glass-chip rounded-2xl px-3 py-2 flex items-center gap-3"
           >
             <FlagBtn id={ep.episodeIndex} />
-            <span className="text-xs text-slate-300 font-medium shrink-0">
+            <span className="shrink-0 text-xs font-medium text-white/82">
               ep {ep.episodeIndex}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-1.5 overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full rounded-full"
                   style={{
@@ -117,7 +117,7 @@ function LowMovementSection({ episodes }: { episodes: LowMovementEpisode[] }) {
                 />
               </div>
             </div>
-            <span className="text-xs text-slate-500 tabular-nums shrink-0">
+            <span className="shrink-0 text-xs tabular-nums text-white/42">
               {ep.totalMovement.toFixed(2)}
             </span>
           </div>
@@ -158,20 +158,20 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
     0.01;
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
-      <h3 className="text-sm font-semibold text-slate-200">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
+      <h3 className="text-sm font-semibold text-white">
         Episode Length Filter
       </h3>
 
       <div className="space-y-2">
-        <div className="flex items-center justify-between text-xs text-slate-400">
+        <div className="flex items-center justify-between text-xs text-white/55">
           <span className="tabular-nums">{rangeMin.toFixed(1)}s</span>
           <span className="tabular-nums">{rangeMax.toFixed(1)}s</span>
         </div>
         <div className="relative h-5">
-          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 rounded bg-slate-700" />
+          <div className="absolute top-1/2 -translate-y-1/2 left-0 right-0 h-1 rounded bg-white/10" />
           <div
-            className="absolute top-1/2 -translate-y-1/2 h-1 rounded bg-orange-500"
+            className="absolute top-1/2 -translate-y-1/2 h-1 rounded bg-white"
             style={{
               left: `${((rangeMin - globalMin) / (globalMax - globalMin || 1)) * 100}%`,
               right: `${100 - ((rangeMax - globalMin) / (globalMax - globalMin || 1)) * 100}%`,
@@ -183,10 +183,12 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
             max={globalMax}
             step={step}
             value={rangeMin}
+            title="Minimum duration filter"
+            aria-label="Minimum duration filter"
             onChange={(e) =>
               setRangeMin(Math.min(Number(e.target.value), rangeMax))
             }
-            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-500 [&::-moz-range-thumb]:cursor-pointer"
+            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
           />
           <input
             type="range"
@@ -194,24 +196,26 @@ function EpisodeLengthFilter({ episodes }: { episodes: EpisodeLengthInfo[] }) {
             max={globalMax}
             step={step}
             value={rangeMax}
+            title="Maximum duration filter"
+            aria-label="Maximum duration filter"
             onChange={(e) =>
               setRangeMax(Math.max(Number(e.target.value), rangeMin))
             }
-            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-orange-500 [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-orange-500 [&::-moz-range-thumb]:cursor-pointer"
+            className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-3.5 [&::-moz-range-thumb]:h-3.5 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-white [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
           />
         </div>
       </div>
 
       {rangeChanged && (
         <div className="flex items-center justify-between">
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-white/55">
             {outsideIds.length} episode{outsideIds.length !== 1 ? "s" : ""}{" "}
             outside range
           </span>
           {outsideIds.length > 0 && (
             <button
               onClick={() => addMany(outsideIds)}
-              className="text-xs bg-orange-500/20 text-orange-400 border border-orange-500/40 rounded px-2 py-1 hover:bg-orange-500/30 transition-colors"
+              className="text-xs bg-white/14 text-white border border-white/24 rounded-full px-2.5 py-1 hover:bg-white/18 transition-colors"
             >
               Flag {outsideIds.length} outside range
             </button>
@@ -274,9 +278,9 @@ function FlaggedIdsCopyBar({
   if (count === 0) return null;
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-4 border border-orange-500/30 space-y-3">
+    <div className="glass-panel-strong rounded-[28px] p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-orange-400">
+        <h3 className="text-sm font-semibold text-white">
           Flagged Episodes
           <span className="text-xs text-slate-500 ml-2 font-normal">
             ({count})
@@ -350,7 +354,7 @@ function FlaggedIdsCopyBar({
           View flagged episodes
         </button>
       )}
-      <div className="bg-slate-900/60 rounded-md px-3 py-2 border border-slate-700/60 space-y-2.5">
+      <div className="glass-chip rounded-2xl px-3 py-2 space-y-2.5">
         {isLocalDataset ? (
           <>
             <p className="text-xs text-slate-400">Local dataset directory:</p>
@@ -366,7 +370,7 @@ function FlaggedIdsCopyBar({
                 href="https://github.com/huggingface/lerobot"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-orange-400 underline"
+                className="text-white underline"
               >
                 LeRobot CLI
               </a>{" "}
@@ -413,7 +417,7 @@ function FilteringPanel({
       )}
 
       {crossEpisodeLoading && (
-        <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
+        <div className="glass-panel rounded-[28px] p-5">
           <div className="flex items-center gap-2 text-slate-400 text-sm py-4 justify-center">
             <svg
               className="animate-spin h-4 w-4"

@@ -30,7 +30,7 @@ function InfoToggle({ children }: { children: React.ReactNode }) {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="p-0.5 rounded-full text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+        className="brand-focus-ring glass-chip shrink-0 rounded-full p-1 text-white/50 transition-colors hover:text-white"
         title="Toggle description"
       >
         <svg
@@ -70,7 +70,7 @@ function FullscreenWrapper({ children }: { children: React.ReactNode }) {
     <div className="relative">
       <button
         onClick={() => setFs((v) => !v)}
-        className="absolute top-3 right-3 z-10 p-1.5 rounded bg-slate-700/60 hover:bg-slate-600 text-slate-400 hover:text-slate-200 transition-colors backdrop-blur-sm"
+        className="brand-focus-ring glass-chip absolute right-3 top-3 z-10 rounded-full p-1.5 text-white/60 transition-colors hover:bg-white/12 hover:text-white"
         title={fs ? "Exit fullscreen" : "Fullscreen"}
       >
         <svg
@@ -102,10 +102,10 @@ function FullscreenWrapper({ children }: { children: React.ReactNode }) {
         </svg>
       </button>
       {fs ? (
-        <div className="fixed inset-0 z-50 bg-slate-950/95 overflow-auto p-6">
+        <div className="fixed inset-0 z-50 overflow-auto bg-black/92 p-6 backdrop-blur-2xl">
           <button
             onClick={() => setFs(false)}
-            className="fixed top-4 right-4 z-50 p-2 rounded bg-slate-700/80 hover:bg-slate-600 text-slate-300 hover:text-white transition-colors"
+            className="brand-focus-ring glass-chip fixed right-4 top-4 z-50 rounded-full p-2 text-white/70 transition-colors hover:bg-white/12 hover:text-white"
             title="Exit fullscreen (Esc)"
           >
             <svg
@@ -145,7 +145,7 @@ function FlagBtn({ id }: { id: number }) {
     <button
       onClick={() => toggle(id)}
       title={flagged ? "Unflag episode" : "Flag for review"}
-      className={`p-0.5 rounded transition-colors ${flagged ? "text-orange-400" : "text-slate-600 hover:text-slate-400"}`}
+      className={`brand-focus-ring rounded p-0.5 transition-colors ${flagged ? "text-white" : "text-white/35 hover:text-white/75"}`}
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -170,7 +170,7 @@ function FlagAllBtn({ ids, label }: { ids: number[]; label?: string }) {
   return (
     <button
       onClick={() => addMany(ids)}
-      className="text-xs text-slate-500 hover:text-orange-400 transition-colors flex items-center gap-1"
+      className="text-xs text-white/45 hover:text-white transition-colors flex items-center gap-1"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -191,18 +191,18 @@ function FlagAllBtn({ ids, label }: { ids: number[]; label?: string }) {
   );
 }
 const COLORS = [
-  "#f97316",
-  "#3b82f6",
-  "#22c55e",
-  "#ef4444",
-  "#a855f7",
-  "#eab308",
-  "#06b6d4",
-  "#ec4899",
-  "#14b8a6",
-  "#f59e0b",
-  "#6366f1",
-  "#84cc16",
+  "#ffffff",
+  "#d4d4d8",
+  "#a1a1aa",
+  "#71717a",
+  "#e4e4e7",
+  "#52525b",
+  "#f4f4f5",
+  "#3f3f46",
+  "#cbd5e1",
+  "#a3a3a3",
+  "#fafafa",
+  "#525252",
 ];
 
 function shortName(key: string): string {
@@ -326,37 +326,37 @@ function AutocorrelationSection({
   }, [chartData, shortKeys]);
 
   if (shortKeys.length === 0)
-    return <p className="text-slate-500 italic">No action columns found.</p>;
+    return <p className="text-white/45 italic">No action columns found.</p>;
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-semibold text-white">
             Action Autocorrelation
-            <span className="text-xs text-slate-500 ml-2 font-normal">
+            <span className="ml-2 text-xs font-normal text-white/45">
               {numEpisodesLabel}
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/65">
               Shows how correlated each action dimension is with itself over
               increasing time lags. Where autocorrelation drops below 0.5
               suggests a{" "}
-              <span className="text-orange-400 font-medium">
+              <span className="font-medium text-white">
                 natural action chunk boundary
               </span>{" "}
               — actions beyond this lag are essentially independent, so
               executing them open-loop offers diminishing returns.
               <br />
-              <span className="text-slate-500">
+              <span className="text-white/45">
                 Grounded in the theoretical result that chunk length should
                 scale logarithmically with system stability constants (
                 <a
                   href="https://arxiv.org/abs/2507.09061"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Zhang et al., 2025
                 </a>
@@ -368,16 +368,16 @@ function AutocorrelationSection({
       </div>
 
       {suggestedChunk && (
-        <div className="flex items-center gap-3 bg-orange-500/10 border border-orange-500/30 rounded-md px-4 py-2.5">
-          <span className="text-orange-400 font-bold text-lg tabular-nums">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/16 bg-white/[0.06] px-4 py-2.5 backdrop-blur-md">
+          <span className="text-lg font-bold tabular-nums text-white">
             {suggestedChunk}
           </span>
           <div>
-            <p className="text-sm text-orange-300 font-medium">
+            <p className="text-sm font-medium text-white">
               Suggested chunk length: {suggestedChunk} steps (
               {(suggestedChunk / fps).toFixed(2)}s)
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/55">
               Median lag where autocorrelation drops below 0.5 across action
               dimensions
             </p>
@@ -452,7 +452,7 @@ function AutocorrelationSection({
               className="w-3 h-[3px] rounded-full shrink-0"
               style={{ background: COLORS[i % COLORS.length] }}
             />
-            <span className="text-xs text-slate-400">{name}</span>
+            <span className="text-xs text-white/58">{name}</span>
           </div>
         ))}
       </div>
@@ -633,44 +633,42 @@ function ActionVelocitySection({
 
   if (stats.length === 0)
     return (
-      <p className="text-slate-500 italic">
+      <p className="text-white/45 italic">
         No action data for velocity analysis.
       </p>
     );
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-semibold text-white">
             Action Velocity (Δa) — Smoothness Proxy
-            <span className="text-xs text-slate-500 ml-2 font-normal">
+            <span className="ml-2 text-xs font-normal text-white/45">
               {isAgg
                 ? `(${numEpisodes} episodes sampled)`
                 : "(current episode)"}
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/65">
               Shows the distribution of frame-to-frame action changes (Δa = a
               <sub>t+1</sub> − a<sub>t</sub>) for each dimension. A{" "}
-              <span className="text-green-400">
-                tight distribution around zero
-              </span>{" "}
+              <span className="text-white">tight distribution around zero</span>{" "}
               means smooth, predictable control — the system is likely stable
               and benefits from longer action chunks.
-              <span className="text-red-400"> Fat tails or high std</span>{" "}
+              <span className="text-white/82"> Fat tails or high std</span>{" "}
               indicate jerky demonstrations, suggesting shorter chunks and
               potentially beneficial noise injection.
               <br />
-              <span className="text-slate-500">
+              <span className="text-white/45">
                 Relates to the Lipschitz constant L<sub>π</sub> and smoothness C
                 <sub>π</sub> in{" "}
                 <a
                   href="https://arxiv.org/abs/2507.09061"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Zhang et al. (2025)
                 </a>
@@ -700,21 +698,21 @@ function ActionVelocitySection({
           return (
             <div
               key={s.name}
-              className={`rounded-md px-2.5 py-2 space-y-1 ${dimmed ? "bg-slate-900/30 opacity-50" : "bg-slate-900/50"}`}
+              className={`glass-chip rounded-2xl px-2.5 py-2 space-y-1 ${dimmed ? "opacity-45" : ""}`}
             >
               <p
-                className={`text-xs font-medium truncate ${dimmed ? "text-slate-500" : "text-slate-200"}`}
+                className={`truncate text-xs font-medium ${dimmed ? "text-white/35" : "text-white"}`}
                 title={s.name}
               >
                 {s.name}
                 {tag && (
-                  <span className="text-slate-600 ml-1 font-normal">
+                  <span className="ml-1 font-normal text-white/28">
                     ({tag})
                   </span>
                 )}
               </p>
               <div
-                className={`flex gap-2 text-xs tabular-nums ${dimmed ? "text-slate-600" : "text-slate-400"}`}
+                className={`flex gap-2 text-xs tabular-nums ${dimmed ? "text-white/30" : "text-white/60"}`}
               >
                 <span>σ={s.std.toFixed(4)}</span>
                 <span>
@@ -743,18 +741,18 @@ function ActionVelocitySection({
                   );
                 })}
               </svg>
-              <div className="h-1 w-full bg-slate-700 rounded-full overflow-hidden">
+              <div className="h-1 w-full overflow-hidden rounded-full bg-white/10">
                 <div
                   className="h-full rounded-full"
                   style={{
                     width: `${Math.min(100, (s.std / maxStd) * 100)}%`,
                     background: dimmed
-                      ? "#475569"
+                      ? "#52525b"
                       : s.std / maxStd < 0.4
-                        ? "#22c55e"
+                        ? "#fafafa"
                         : s.std / maxStd < 0.7
-                          ? "#eab308"
-                          : "#ef4444",
+                          ? "#a1a1aa"
+                          : "#525252",
                   }}
                 />
               </div>
@@ -764,19 +762,19 @@ function ActionVelocitySection({
       </div>
 
       {insight && (
-        <div className="bg-slate-900/60 rounded-md px-4 py-3 border border-slate-700/60 space-y-1.5">
-          <p className="text-sm font-medium text-slate-200">
+        <div className="glass-chip rounded-2xl px-4 py-3 space-y-1.5">
+          <p className="text-sm font-medium text-white">
             Overall:{" "}
             <span className={insight.verdict.color}>
               {insight.verdict.label}
             </span>
           </p>
-          <ul className="text-xs text-slate-400 space-y-0.5 list-disc list-inside">
+          <ul className="list-inside list-disc space-y-0.5 text-xs text-white/65">
             {insight.lines.map((l, i) => (
               <li key={i}>{l}</li>
             ))}
           </ul>
-          <p className="text-xs text-slate-500 pt-1">{insight.tip}</p>
+          <p className="pt-1 text-xs text-white/45">{insight.tip}</p>
         </div>
       )}
 
@@ -792,11 +790,11 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
   const display = showAll ? episodes : episodes.slice(0, 15);
 
   return (
-    <div className="bg-slate-900/60 rounded-md px-4 py-3 border border-slate-700/60 space-y-2">
+    <div className="glass-chip rounded-2xl px-4 py-3 space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-200">
+        <p className="text-sm font-medium text-white">
           Most Jerky Episodes{" "}
-          <span className="text-xs text-slate-500 font-normal">
+          <span className="text-xs font-normal text-white/40">
             sorted by mean |Δa|
           </span>
         </p>
@@ -805,7 +803,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
           {episodes.length > 15 && (
             <button
               onClick={() => setShowAll((v) => !v)}
-              className="text-xs text-slate-400 hover:text-slate-200 transition-colors"
+              className="text-xs text-white/55 transition-colors hover:text-white"
             >
               {showAll ? "Show top 15" : `Show all ${episodes.length}`}
             </button>
@@ -815,7 +813,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
       <div className="max-h-48 overflow-y-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="text-slate-500 border-b border-slate-700">
+            <tr className="border-b border-white/10 text-white/42">
               <th className="w-5 py-1" />
               <th className="text-left py-1 pr-3">Episode</th>
               <th className="text-right py-1">Mean |Δa|</th>
@@ -825,7 +823,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
             {display.map((e) => (
               <tr
                 key={e.episodeIndex}
-                className="border-b border-slate-800/40 text-slate-300"
+                className="border-b border-white/6 text-white/78"
               >
                 <td className="py-1">
                   <FlagBtn id={e.episodeIndex} />
@@ -856,11 +854,11 @@ function VarianceHeatmap({
 
   if (loading) {
     return (
-      <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
-        <h3 className="text-sm font-semibold text-slate-200 mb-2">
+      <div className="glass-panel rounded-[28px] p-5">
+        <h3 className="mb-2 text-sm font-semibold text-white">
           Cross-Episode Action Variance
         </h3>
-        <div className="flex items-center gap-2 text-slate-400 text-sm py-8 justify-center">
+        <div className="flex items-center justify-center gap-2 py-8 text-sm text-white/60">
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
@@ -884,11 +882,11 @@ function VarianceHeatmap({
 
   if (!data) {
     return (
-      <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
-        <h3 className="text-sm font-semibold text-slate-200 mb-2">
+      <div className="glass-panel rounded-[28px] p-5">
+        <h3 className="mb-2 text-sm font-semibold text-white">
           Cross-Episode Action Variance
         </h3>
-        <p className="text-slate-500 italic text-sm">
+        <p className="text-sm italic text-white/45">
           Not enough episodes or no action data to compute variance.
         </p>
       </div>
@@ -916,44 +914,38 @@ function VarianceHeatmap({
 
   function varColor(v: number): string {
     const t = Math.sqrt(v / maxVar); // sqrt for better visual spread
-    // Dark blue → teal → orange
-    const r = Math.round(t * 249);
-    const g = Math.round(t < 0.5 ? 80 + t * 200 : 180 - (t - 0.5) * 200);
-    const b = Math.round((1 - t) * 200 + 30);
-    return `rgb(${r},${g},${b})`;
+    const tone = Math.round(30 + t * 225);
+    return `rgb(${tone},${tone},${tone})`;
   }
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-semibold text-white">
             Cross-Episode Action Variance
-            <span className="text-xs text-slate-500 ml-2 font-normal">
+            <span className="ml-2 text-xs font-normal text-white/45">
               ({numEpisodes} episodes sampled)
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/65">
               Shows how much each action dimension varies across episodes at
               each point in time (normalized 0–100%).
-              <span className="text-orange-400">
-                {" "}
-                High-variance regions
-              </span>{" "}
+              <span className="text-white"> High-variance regions</span>{" "}
               indicate multi-modal or inconsistent demonstrations — generative
               policies (diffusion, flow-matching) and action chunking help here
               by modeling multiple modes.
-              <span className="text-blue-400"> Low-variance regions</span>{" "}
+              <span className="text-white/85"> Low-variance regions</span>{" "}
               indicate consistent behavior across demonstrations.
               <br />
-              <span className="text-slate-500">
+              <span className="text-white/45">
                 Relates to the &quot;coverage&quot; discussion in{" "}
                 <a
                   href="https://arxiv.org/abs/2507.09061"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Zhang et al. (2025)
                 </a>{" "}
@@ -977,7 +969,7 @@ function VarianceHeatmap({
                 width={cellW}
                 height={cellH}
                 fill={varColor(v)}
-                stroke="#1e293b"
+                stroke="#0a0a0a"
                 strokeWidth={0.5}
               >
                 <title>{`${shortName(actionNames[di])} @ ${(timeBins[bi] * 100).toFixed(0)}%: var=${v.toFixed(5)}`}</title>
@@ -993,7 +985,7 @@ function VarianceHeatmap({
               y={di * cellH + cellH / 2}
               textAnchor="end"
               dominantBaseline="central"
-              className="fill-slate-400"
+              className="fill-white/55"
               fontSize={Math.min(11, cellH - 4)}
             >
               {shortName(name)}
@@ -1009,7 +1001,7 @@ function VarianceHeatmap({
                 x={labelW + binIdx * cellW + cellW / 2}
                 y={numDims * cellH + 14}
                 textAnchor="middle"
-                className="fill-slate-400"
+                className="fill-white/55"
                 fontSize={9}
               >
                 {(frac * 100).toFixed(0)}%
@@ -1020,7 +1012,7 @@ function VarianceHeatmap({
             x={labelW + (numBins * cellW) / 2}
             y={numDims * cellH + 30}
             textAnchor="middle"
-            className="fill-slate-500"
+            className="fill-white/38"
             fontSize={10}
           >
             Episode progress
@@ -1045,7 +1037,7 @@ function VarianceHeatmap({
           <text
             x={labelW + numBins * cellW + 34}
             y={10}
-            className="fill-slate-500"
+            className="fill-white/38"
             fontSize={8}
             dominantBaseline="central"
           >
@@ -1054,7 +1046,7 @@ function VarianceHeatmap({
           <text
             x={labelW + numBins * cellW + 34}
             y={numDims * cellH - 4}
-            className="fill-slate-500"
+            className="fill-white/38"
             fontSize={8}
             dominantBaseline="central"
           >
@@ -1135,26 +1127,25 @@ function SpeedVarianceSection({
   const barW = Math.max(8, Math.floor((isFs ? 900 : 500) / bins.length));
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-semibold text-white">
             Demonstrator Speed Variance
-            <span className="text-xs text-slate-500 ml-2 font-normal">
+            <span className="ml-2 text-xs font-normal text-white/45">
               ({numEpisodes} episodes)
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/65">
               Distribution of average execution speed (mean ‖Δa<sub>t</sub>‖ per
               frame) across all episodes. Different human demonstrators often
-              execute at{" "}
-              <span className="text-orange-400">different speeds</span>,
+              execute at <span className="text-white">different speeds</span>,
               creating artificial multimodality in the action distribution that
               confuses the policy. A coefficient of variation (CV) above 0.3
               strongly suggests normalizing trajectory speed before training.
               <br />
-              <span className="text-slate-500">
+              <span className="text-white/45">
                 Based on &quot;Is Diversity All You Need&quot; (AGI-Bot, 2025)
                 which shows velocity normalization dramatically improves
                 fine-tuning success rate.
@@ -1197,7 +1188,7 @@ function SpeedVarianceSection({
                   x={idx * barW + barW / 2}
                   y={barH + 14}
                   textAnchor="middle"
-                  className="fill-slate-400"
+                  className="fill-white/55"
                   fontSize={9}
                 >
                   {(lo + idx * binW).toFixed(2)}
@@ -1208,25 +1199,25 @@ function SpeedVarianceSection({
         </div>
         <div className="flex flex-col gap-2 text-xs shrink-0 min-w-[120px]">
           <div>
-            <span className="text-slate-500">Mean</span>{" "}
-            <span className="text-slate-200 tabular-nums ml-1">
+            <span className="text-white/40">Mean</span>{" "}
+            <span className="ml-1 tabular-nums text-white">
               {mean.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-slate-500">Median</span>{" "}
-            <span className="text-slate-200 tabular-nums ml-1">
+            <span className="text-white/40">Median</span>{" "}
+            <span className="ml-1 tabular-nums text-white">
               {median.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-slate-500">Std</span>{" "}
-            <span className="text-slate-200 tabular-nums ml-1">
+            <span className="text-white/40">Std</span>{" "}
+            <span className="ml-1 tabular-nums text-white">
               {std.toFixed(4)}
             </span>
           </div>
           <div>
-            <span className="text-slate-500">CV</span>
+            <span className="text-white/40">CV</span>
             <span className={`tabular-nums ml-1 font-bold ${verdict.color}`}>
               {cv.toFixed(3)}
             </span>
@@ -1234,11 +1225,11 @@ function SpeedVarianceSection({
         </div>
       </div>
 
-      <div className="bg-slate-900/60 rounded-md px-4 py-3 border border-slate-700/60 space-y-1.5">
-        <p className="text-sm font-medium text-slate-200">
+      <div className="glass-chip rounded-2xl px-4 py-3 space-y-1.5">
+        <p className="text-sm font-medium text-white">
           Verdict: <span className={verdict.color}>{verdict.label}</span>
         </p>
-        <p className="text-xs text-slate-400">{verdict.tip}</p>
+        <p className="text-xs text-white/62">{verdict.tip}</p>
       </div>
     </div>
   );
@@ -1402,34 +1393,34 @@ function StateActionAlignmentSection({
     : "current episode";
 
   return (
-    <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700 space-y-4">
+    <div className="glass-panel rounded-[28px] p-5 space-y-4">
       <div>
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold text-slate-200">
+          <h3 className="text-sm font-semibold text-white">
             State–Action Temporal Alignment
-            <span className="text-xs text-slate-500 ml-2 font-normal">
+            <span className="ml-2 text-xs font-normal text-white/45">
               ({scopeLabel}, {numPairs} matched pair{numPairs !== 1 ? "s" : ""})
             </span>
           </h3>
           <InfoToggle>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/65">
               Per-dimension cross-correlation between Δaction<sub>d</sub>(t) and
               Δstate<sub>d</sub>(t+lag), aggregated as
-              <span className="text-orange-400"> max</span>,{" "}
-              <span className="text-slate-200">mean</span>, and
-              <span className="text-blue-400"> min</span> across all matched
+              <span className="text-white"> max</span>,{" "}
+              <span className="text-white/82">mean</span>, and
+              <span className="text-white/58"> min</span> across all matched
               action–state pairs. The{" "}
-              <span className="text-orange-400">peak lag</span> reveals the
-              effective control delay — the time between when an action is
-              commanded and when the corresponding state changes.
+              <span className="text-white">peak lag</span> reveals the effective
+              control delay — the time between when an action is commanded and
+              when the corresponding state changes.
               <br />
-              <span className="text-slate-500">
+              <span className="text-white/45">
                 Central to ACT (
                 <a
                   href="https://arxiv.org/abs/2304.13705"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Zhao et al., 2023
                 </a>{" "}
@@ -1439,7 +1430,7 @@ function StateActionAlignmentSection({
                   href="https://arxiv.org/abs/2506.07339"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Black et al., 2025
                 </a>
@@ -1448,7 +1439,7 @@ function StateActionAlignmentSection({
                   href="https://arxiv.org/abs/2512.05964"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="underline hover:text-slate-300"
+                  className="underline hover:text-white"
                 >
                   Black et al., 2025
                 </a>
@@ -1461,17 +1452,17 @@ function StateActionAlignmentSection({
       </div>
 
       {meanPeakLag !== 0 && (
-        <div className="flex items-center gap-3 bg-orange-500/10 border border-orange-500/30 rounded-md px-4 py-2.5">
-          <span className="text-orange-400 font-bold text-lg tabular-nums">
+        <div className="flex items-center gap-3 rounded-2xl border border-white/16 bg-white/[0.06] px-4 py-2.5 backdrop-blur-md">
+          <span className="text-lg font-bold tabular-nums text-white">
             {meanPeakLag}
           </span>
           <div>
-            <p className="text-sm text-orange-300 font-medium">
+            <p className="text-sm font-medium text-white">
               Mean control delay: {meanPeakLag} step
               {Math.abs(meanPeakLag) !== 1 ? "s" : ""} (
               {(meanPeakLag / fps).toFixed(3)}s)
             </p>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-white/55">
               {meanPeakLag > 0
                 ? `State changes lag behind actions by ~${meanPeakLag} frames on average. Consider aligning action[t] with state[t+${meanPeakLag}].`
                 : `Actions lag behind state changes by ~${-meanPeakLag} frames on average (predictive actions).`}
@@ -1555,20 +1546,20 @@ function StateActionAlignmentSection({
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 px-1">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-[3px] rounded-full shrink-0 bg-orange-500" />
-          <span className="text-xs text-slate-400">
+          <span className="h-[3px] w-3 shrink-0 rounded-full bg-white" />
+          <span className="text-xs text-white/65">
             max (peak: lag {maxPeakLag}, r={maxPeakCorr.toFixed(3)})
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-[3px] rounded-full shrink-0 bg-slate-400" />
-          <span className="text-xs text-slate-400">
+          <span className="h-[3px] w-3 shrink-0 rounded-full bg-zinc-400" />
+          <span className="text-xs text-white/65">
             mean (peak: lag {meanPeakLag}, r={meanPeakCorr.toFixed(3)})
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-[3px] rounded-full shrink-0 bg-blue-500" />
-          <span className="text-xs text-slate-400">
+          <span className="h-[3px] w-3 shrink-0 rounded-full bg-zinc-700" />
+          <span className="text-xs text-white/65">
             min (peak: lag {minPeakLag}, r={minPeakCorr.toFixed(3)})
           </span>
         </div>
@@ -1603,18 +1594,23 @@ function ActionInsightsPanel({
   const showAgg = mode === "dataset" && !!crossEpisodeData;
 
   return (
-    <div className="max-w-5xl mx-auto py-6 space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8 py-2">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-100">Action Insights</h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="mb-2 text-[0.72rem] uppercase tracking-[0.28em] text-white/38">
+            Motion Diagnostics
+          </p>
+          <h2 className="text-xl font-bold text-white md:text-2xl">
+            Action Insights
+          </h2>
+          <p className="mt-1 text-sm text-white/58">
             Data-driven analysis to guide action chunking, data quality
             assessment, and training configuration.
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="glass-chip flex shrink-0 items-center gap-3 rounded-full px-4 py-2">
           <span
-            className={`text-sm ${mode === "episode" ? "text-slate-100 font-medium" : "text-slate-500"}`}
+            className={`text-sm ${mode === "episode" ? "font-medium text-white" : "text-white/40"}`}
           >
             Current Episode
           </span>
@@ -1622,7 +1618,7 @@ function ActionInsightsPanel({
             onClick={() =>
               setMode((m) => (m === "episode" ? "dataset" : "episode"))
             }
-            className={`relative inline-flex items-center w-9 h-5 rounded-full transition-colors shrink-0 ${mode === "dataset" ? "bg-orange-500" : "bg-slate-600"}`}
+            className={`brand-focus-ring relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${mode === "dataset" ? "bg-gradient-to-r from-white to-zinc-500" : "bg-white/18"}`}
             aria-label="Toggle episode/dataset scope"
           >
             <span
@@ -1630,7 +1626,7 @@ function ActionInsightsPanel({
             />
           </button>
           <span
-            className={`text-sm ${mode === "dataset" ? "text-slate-100 font-medium" : "text-slate-500"}`}
+            className={`text-sm ${mode === "dataset" ? "font-medium text-white" : "text-white/40"}`}
           >
             All Episodes
             {crossEpisodeData ? ` (${crossEpisodeData.numEpisodes})` : ""}
