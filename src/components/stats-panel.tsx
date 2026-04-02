@@ -43,7 +43,7 @@ function EpisodeLengthHistogram({
   const labelStep = Math.max(1, Math.ceil(data.length / 10));
 
   return (
-    <div className="overflow-x-auto">
+    <div className="theme-scrollbar overflow-x-auto">
       <svg
         width={svgWidth}
         height={topPad + chartHeight + labelHeight}

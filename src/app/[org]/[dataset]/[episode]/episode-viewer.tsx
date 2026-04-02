@@ -490,8 +490,8 @@ function EpisodeViewerInner({
       className="brand-aurora relative flex h-screen max-h-screen flex-col overflow-hidden text-slate-100"
       data-theme={theme}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_30%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.04),transparent_36%,rgba(255,255,255,0.08)_72%,transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-white/[0.05]" />
+      <div className="pointer-events-none absolute inset-0 bg-white/[0.03]" />
 
       {/* Top tab bar */}
       <div className="glass-panel-strong relative z-10 mx-4 mt-4 flex shrink-0 flex-wrap items-center gap-2 rounded-[28px] px-3 py-2">

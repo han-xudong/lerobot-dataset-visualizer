@@ -846,7 +846,7 @@ export default function URDFViewer({
               </div>
             </div>
 
-            <div className="flex-1 overflow-x-auto max-h-48 overflow-y-auto">
+            <div className="theme-scrollbar flex-1 overflow-x-auto max-h-48 overflow-y-auto">
               <table className="w-full text-xs">
                 <thead className="brand-overlay-surface sticky top-0">
                   <tr className="text-ink-soft">

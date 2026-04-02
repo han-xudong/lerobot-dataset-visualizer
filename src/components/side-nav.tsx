@@ -263,7 +263,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         title="Toggle sidebar"
         aria-label="Toggle episode sidebar"
       >
-        <div className="h-10 w-2 rounded-full bg-gradient-to-b from-white to-zinc-500" />
+        <div className="h-10 w-2 rounded-full bg-current opacity-70" />
       </button>
     </div>
   );

@@ -810,7 +810,7 @@ function JerkyEpisodesList({ episodes }: { episodes: JerkyEpisode[] }) {
           )}
         </div>
       </div>
-      <div className="max-h-48 overflow-y-auto">
+      <div className="theme-scrollbar max-h-48 overflow-y-auto">
         <table className="w-full text-xs">
           <thead>
             <tr className="text-ink-soft border-b border-white/10">
@@ -957,7 +957,7 @@ function VarianceHeatmap({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="theme-scrollbar overflow-x-auto">
         <svg width={svgW} height={svgH} className="block">
           {/* Heatmap cells */}
           {variance.map((row, bi) =>
@@ -1156,7 +1156,7 @@ function SpeedVarianceSection({
       </div>
 
       <div className="flex gap-4">
-        <div className="flex-1 overflow-x-auto">
+        <div className="theme-scrollbar flex-1 overflow-x-auto">
           <svg width={bins.length * barW} height={barH + 24} className="block">
             {bins.map((count: number, i: number) => {
               const h = maxBin > 0 ? (count / maxBin) * barH : 0;

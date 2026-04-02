@@ -3,7 +3,7 @@
 export default function Loading() {
   return (
     <div
-      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_25%),rgba(2,6,23,0.78)] text-slate-100 animate-fade-in backdrop-blur-xl"
+      className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/80 text-slate-100 animate-fade-in backdrop-blur-xl"
       tabIndex={-1}
       aria-modal="true"
       role="dialog"

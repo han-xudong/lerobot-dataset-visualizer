@@ -329,7 +329,7 @@ function FlaggedIdsCopyBar({
           </button>
         </div>
       </div>
-      <p className="text-xs text-slate-300 tabular-nums leading-relaxed max-h-20 overflow-y-auto">
+      <p className="theme-scrollbar max-h-20 overflow-y-auto text-xs text-slate-300 tabular-nums leading-relaxed">
         {idStr}
       </p>
       {onViewEpisodes && (
@@ -358,10 +358,10 @@ function FlaggedIdsCopyBar({
         {isLocalDataset ? (
           <>
             <p className="text-xs text-slate-400">Local dataset directory:</p>
-            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+            <pre className="theme-scrollbar overflow-x-auto text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 select-all">
               {displayName}
             </pre>
-            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">{`# Episode indices selected for removal from the local dataset\n[${ids.join(", ")}]`}</pre>
+            <pre className="theme-scrollbar overflow-x-auto text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 select-all">{`# Episode indices selected for removal from the local dataset\n[${ids.join(", ")}]`}</pre>
           </>
         ) : (
           <>
@@ -376,10 +376,10 @@ function FlaggedIdsCopyBar({
               </a>{" "}
               — delete flagged episodes:
             </p>
-            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+            <pre className="theme-scrollbar overflow-x-auto text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 select-all">
               {deleteEpisodesCommand}
             </pre>
-            <pre className="text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 overflow-x-auto select-all">
+            <pre className="theme-scrollbar overflow-x-auto text-xs text-slate-300 bg-slate-950/50 rounded px-2 py-1.5 select-all">
               {deleteAndSaveCommand}
             </pre>
           </>
