@@ -49,6 +49,23 @@ const ActionInsightsPanel = lazy(
 const FilteringPanel = lazy(() => import("@/components/filtering-panel"));
 const THEME_STORAGE_KEY = "episode-viewer-theme";
 
+function resolveInitialTheme(initialTheme: "dark" | "light") {
+  if (typeof window === "undefined") {
+    return initialTheme;
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+    return "light";
+  }
+
+  return initialTheme;
+}
+
 type ActiveTab =
   | "episodes"
   | "statistics"
@@ -61,12 +78,14 @@ export default function EpisodeViewer({
   org,
   dataset,
   episodeId,
+  initialTheme,
   initialData,
   initialError,
 }: {
   org: string;
   dataset: string;
   episodeId: number;
+  initialTheme: "dark" | "light";
   initialData: EpisodeData | null;
   initialError: string | null;
 }) {
@@ -92,7 +111,7 @@ export default function EpisodeViewer({
   if (!data) {
     return (
       <div className="relative h-screen bg-slate-950">
-        <Loading />
+        <Loading theme={initialTheme} />
       </div>
     );
   }
@@ -100,7 +119,12 @@ export default function EpisodeViewer({
   return (
     <TimeProvider duration={data!.duration}>
       <FlaggedEpisodesProvider>
-        <EpisodeViewerInner data={data!} org={org} dataset={dataset} />
+        <EpisodeViewerInner
+          data={data!}
+          org={org}
+          dataset={dataset}
+          initialTheme={initialTheme}
+        />
       </FlaggedEpisodesProvider>
     </TimeProvider>
   );
@@ -110,10 +134,12 @@ function EpisodeViewerInner({
   data,
   org,
   dataset,
+  initialTheme,
 }: {
   data: EpisodeData;
   org?: string;
   dataset?: string;
+  initialTheme: "dark" | "light";
 }) {
   const {
     datasetInfo,
@@ -130,7 +156,9 @@ function EpisodeViewerInner({
 
   const [videosReady, setVideosReady] = useState(!videosInfo.length);
   const [chartsReady, setChartsReady] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    resolveInitialTheme(initialTheme),
+  );
 
   const loadStartRef = useRef(performance.now());
 
@@ -138,19 +166,8 @@ function EpisodeViewerInner({
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    if (storedTheme === "light" || storedTheme === "dark") {
-      setTheme(storedTheme);
-      return;
-    }
-
-    if (window.matchMedia("(prefers-color-scheme: light)").matches) {
-      setTheme("light");
-    }
-  }, []);
-
-  useEffect(() => {
     window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    document.cookie = `${THEME_STORAGE_KEY}=${theme}; path=/; max-age=31536000; samesite=lax`;
   }, [theme]);
 
   // Tab state & lazy stats
@@ -606,7 +623,7 @@ function EpisodeViewerInner({
         <div
           className={`theme-scrollbar glass-panel-strong flex flex-1 flex-col gap-5 overflow-hidden rounded-[32px] p-5 md:p-6 relative ${isLoading ? "overflow-hidden" : "overflow-y-auto"}`}
         >
-          {isLoading && <Loading />}
+          {isLoading && <Loading theme={theme} />}
 
           {activeTab === "episodes" && (
             <>
@@ -717,7 +734,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "insights" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <ActionInsightsPanel
                 flatChartData={data.flatChartData}
                 fps={datasetInfo.fps}
@@ -728,7 +745,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "filtering" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <FilteringPanel
                 repoId={datasetInfo.repoId}
                 crossEpisodeData={crossEpData}
@@ -744,7 +761,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "urdf" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <URDFViewer
                 data={data}
                 org={org}
