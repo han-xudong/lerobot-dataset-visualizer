@@ -5,6 +5,7 @@ const electronDist = require("./scripts/electron-builder-electron-dist.cjs");
 const electronPackage = require("electron/package.json");
 const PRODUCT_NAME = "LeRobot Dataset Visualizer";
 const ROOT_DIR = __dirname;
+const APP_SLUG = "lerobot-dataset-visualizer";
 
 function getResourcesDirectory(appOutDir, electronPlatformName) {
   if (electronPlatformName === "darwin") {
@@ -30,6 +31,7 @@ module.exports = {
   appId: "com.hanxudong.lerobot-dataset-visualizer",
   productName: PRODUCT_NAME,
   electronVersion: electronPackage.version,
+  artifactName: `${APP_SLUG}-\${version}-\${os}-\${arch}.\${ext}`,
   icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
   compression: "normal",
   npmRebuild: false,
@@ -44,7 +46,7 @@ module.exports = {
   linux: {
     target: ["AppImage", "deb"],
     category: "Science",
-    executableName: "lerobot-visualizer",
+    executableName: APP_SLUG,
     icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
   },
   win: {

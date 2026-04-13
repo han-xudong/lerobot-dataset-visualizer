@@ -152,7 +152,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           command -v xvfb-run
-          node scripts/smoke-test-packaged-app.mjs xvfb-run -a dist-electron/linux-unpacked/lerobot-visualizer --no-sandbox --disable-setuid-sandbox
+          node scripts/smoke-test-packaged-app.mjs xvfb-run -a dist-electron/linux-unpacked/lerobot-dataset-visualizer --no-sandbox --disable-setuid-sandbox
 
       - name: Smoke test Windows desktop app
         if: runner.os == 'Windows'

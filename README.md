@@ -48,6 +48,14 @@ This tool is designed to help robotics researchers and practitioners quickly ins
 - **hyparquet** (for reading Parquet files)
 - **Tailwind CSS** (styling)
 
+## Download Desktop Builds
+
+If you only want to use the app, download a packaged build from [GitHub Releases](https://github.com/han-xudong/lerobot-dataset-visualizer/releases) instead of building from source. Pick the installer that matches your platform:
+
+- Linux: `.deb` or `.AppImage`
+- macOS: `.dmg`
+- Windows: `.exe`
+
 ## Getting Started
 
 ### Prerequisites
