@@ -1,8 +1,43 @@
-import React from "react";
 import ExploreGrid from "./explore-grid";
-import { fetchJson, formatStringWithVars } from "@/utils/parquetUtils";
-import { getDatasetVersion, buildVersionedUrl } from "@/utils/versionUtils";
-import type { DatasetMetadata } from "@/utils/parquetUtils";
+import { formatStringWithVars } from "@/utils/parquetUtils";
+import {
+  buildVersionedUrl,
+  getDatasetVersionAndInfo,
+} from "@/utils/versionUtils";
+
+const DATASETS_PER_PAGE = 30;
+const EXPLORE_DATASET_CONCURRENCY = 6;
+
+type DatasetListEntry = { id: string };
+type DatasetPreview = { id: string; videoUrl: string | null };
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  concurrency: number,
+  mapper: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    while (true) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+
+      if (currentIndex >= items.length) {
+        return;
+      }
+
+      results[currentIndex] = await mapper(items[currentIndex], currentIndex);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker()),
+  );
+
+  return results;
+}
 
 export default async function ExplorePage({
   searchParams,
@@ -10,7 +45,7 @@ export default async function ExplorePage({
   searchParams: Promise<{ p?: string }>;
 }) {
   const params = await searchParams;
-  let datasets: { id: string }[] = [];
+  let datasets: DatasetListEntry[] = [];
   let currentPage = 1;
   let totalPages = 1;
   try {
@@ -25,63 +60,54 @@ export default async function ExplorePage({
     const allDatasets = data.datasets || data;
     // Use params from props
     const page = parseInt(params?.p || "1", 10);
-    const perPage = 30;
-
     currentPage = page;
-    totalPages = Math.ceil(allDatasets.length / perPage);
+    totalPages = Math.ceil(allDatasets.length / DATASETS_PER_PAGE);
 
-    const startIdx = (currentPage - 1) * perPage;
-    const endIdx = startIdx + perPage;
+    const startIdx = (currentPage - 1) * DATASETS_PER_PAGE;
+    const endIdx = startIdx + DATASETS_PER_PAGE;
     datasets = allDatasets.slice(startIdx, endIdx);
   } catch {
     return <div className="p-8 text-red-600">Failed to load datasets.</div>;
   }
 
-  // Fetch episode 0 data for each dataset
   const datasetWithVideos = (
-    await Promise.all(
-      datasets.map(async (ds) => {
+    await mapWithConcurrency(
+      datasets,
+      EXPLORE_DATASET_CONCURRENCY,
+      async (ds): Promise<DatasetPreview | null> => {
         try {
-          const [org, dataset] = ds.id.split("/");
-          const repoId = `${org}/${dataset}`;
+          const repoId = ds.id;
 
-          // Try to get compatible version, but don't fail the entire page if incompatible
-          let version: string;
+          let versionAndInfo: Awaited<
+            ReturnType<typeof getDatasetVersionAndInfo>
+          >;
           try {
-            version = await getDatasetVersion(repoId);
+            versionAndInfo = await getDatasetVersionAndInfo(repoId);
           } catch (err) {
-            // Dataset is not compatible, skip it silently
             console.warn(
               `Skipping incompatible dataset ${repoId}: ${err instanceof Error ? err.message : err}`,
             );
             return null;
           }
 
-          const jsonUrl = buildVersionedUrl(repoId, version, "meta/info.json");
-          const info = await fetchJson<DatasetMetadata>(jsonUrl);
+          const { version, info } = versionAndInfo;
           const videoEntry = Object.entries(info.features).find(
             ([, value]) => value.dtype === "video",
           );
-          let videoUrl: string | null = null;
-          if (videoEntry && info.video_path) {
-            const [key] = videoEntry;
-            const videoPath = formatStringWithVars(info.video_path, {
-              video_key: key,
-              episode_chunk: "0".padStart(3, "0"),
-              episode_index: "0".padStart(6, "0"),
-            });
-            const url = buildVersionedUrl(repoId, version, videoPath);
-            // Check if videoUrl exists (status 200)
-            try {
-              const headRes = await fetch(url, { method: "HEAD" });
-              if (headRes.ok) {
-                videoUrl = url;
-              }
-            } catch {
-              // If fetch fails, videoUrl remains null
-            }
+          if (!videoEntry || !info.video_path) {
+            return null;
           }
-          return videoUrl ? { id: repoId, videoUrl } : null;
+
+          const [key] = videoEntry;
+          const videoPath = formatStringWithVars(info.video_path, {
+            video_key: key,
+            episode_chunk: "0".padStart(3, "0"),
+            episode_index: "0".padStart(6, "0"),
+          });
+          return {
+            id: repoId,
+            videoUrl: buildVersionedUrl(repoId, version, videoPath),
+          };
         } catch (err) {
           console.error(
             `Failed to fetch or parse dataset info for ${ds.id}:`,
@@ -89,9 +115,9 @@ export default async function ExplorePage({
           );
           return null;
         }
-      }),
+      },
     )
-  ).filter(Boolean) as { id: string; videoUrl: string | null }[];
+  ).filter(Boolean) as DatasetPreview[];
 
   return (
     <ExploreGrid
