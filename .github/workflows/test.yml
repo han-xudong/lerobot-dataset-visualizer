@@ -5,12 +5,22 @@ on:
     branches: [main]
     paths:
       - "src/**"
+      - "electron/**"
+      - "scripts/**"
+      - "public/**"
+      - "*.cjs"
+      - "*.mjs"
       - "*.json"
       - ".github/workflows/test.yml"
   pull_request:
     branches: [main]
     paths:
       - "src/**"
+      - "electron/**"
+      - "scripts/**"
+      - "public/**"
+      - "*.cjs"
+      - "*.mjs"
       - "*.json"
       - ".github/workflows/test.yml"
 

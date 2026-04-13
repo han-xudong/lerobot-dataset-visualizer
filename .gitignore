@@ -18,10 +18,17 @@ package-lock.json
 /.next/
 /out/
 /public/*
+!/public/assets/
+!/public/assets/icons/
+!/public/assets/icons/lerobot-icon.jpg
 !/public/urdf/
+/public/assets/icons/generated/
+/public/assets/icons/lerobot-icon.png
+/public/favicon.ico
 
 # production
 /build
+/dist-electron
 
 # misc
 .DS_Store
@@ -48,9 +55,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/src/app/icon.png
+/src/app/apple-icon.png
 
 # claude code local settings
 .claude/
 
 # data
 data/
+
+docs/

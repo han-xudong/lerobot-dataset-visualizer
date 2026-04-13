@@ -21,6 +21,13 @@ jobs:
           fetch-depth: 0
           lfs: true
           ref: main
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Generate icons
+        run: bun run generate:icons
       - name: Sync to HF Space
         uses: huggingface/hub-sync@4d340790b2a7cc86e598dce1c29a0c7c6adf3d62 # main
         with:

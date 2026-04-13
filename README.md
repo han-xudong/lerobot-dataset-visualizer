@@ -9,6 +9,8 @@ pinned: false
 license: apache-2.0
 ---
 
+<!-- markdownlint-disable MD025 -->
+
 # LeRobot Dataset Visualizer
 
 LeRobot Dataset Tool and Visualizer is a web application for interactive exploration and visualization of robotics datasets, particularly those in the LeRobot format. It enables users to browse, view, and analyze episodes from large-scale robotics datasets, combining synchronized video playback with rich, interactive data graphs.
@@ -100,12 +102,29 @@ Important constraints:
 - The directory must exist on the same machine where the app is running
 - Browser folder pickers usually do **not** expose the absolute directory path for security reasons
 
-Because of that browser limitation, the most reliable workflow is still to paste the local directory path manually into the home page.
+Because of that browser limitation, the Web version keeps the manual path input workflow.
 
-The `Choose Local Directory` button is a best-effort helper:
+The native `Choose Local Directory` button is available only in the Electron desktop app, where the OS file picker can return a real directory path.
 
-- In environments that expose a non-standard file path property, it can auto-fill the local path
-- In standard browsers, it can validate selection intent but may still require manual path pasting
+### Desktop App (Electron)
+
+The repository now includes an Electron shell for desktop builds.
+
+- Web app: no directory picker button, manual local path input only
+- Electron desktop app: shows a `Choose Local Directory` button on the home page
+
+Useful commands:
+
+```bash
+# Start Next.js + Electron in development
+bun run desktop:dev
+
+# Build the Next.js standalone output for Electron
+bun run desktop:build
+
+# Produce desktop installers
+bun run desktop:dist
+```
 
 ### Other Commands
 
@@ -115,6 +134,9 @@ bun run build
 
 # Start production server
 bun start
+
+# Start the Electron desktop app in development
+bun run desktop:dev
 
 # Run linter
 bun run lint

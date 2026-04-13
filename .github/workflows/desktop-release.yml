@@ -1,0 +1,161 @@
+name: Desktop Build & Release
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "electron/**"
+      - "scripts/**"
+      - "public/**"
+      - "*.cjs"
+      - "*.mjs"
+      - "*.json"
+      - ".github/workflows/desktop-release.yml"
+  push:
+    branches: [main]
+    tags:
+      - "v*"
+    paths:
+      - "src/**"
+      - "electron/**"
+      - "scripts/**"
+      - "public/**"
+      - "*.cjs"
+      - "*.mjs"
+      - "*.json"
+      - ".github/workflows/desktop-release.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare-icons:
+    name: Prepare Desktop Assets
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate icon assets
+        run: bun run generate:icons
+
+      - name: Upload prepared assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-prepared-assets
+          path: |
+            public/assets/icons/generated/**
+            public/assets/icons/lerobot-icon.png
+            public/favicon.ico
+            src/app/icon.png
+            src/app/apple-icon.png
+          if-no-files-found: error
+
+  desktop-build:
+    needs: prepare-icons
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Validate Linux Desktop Build
+            os: ubuntu-latest
+            command: bun run desktop:dist:ci
+            artifact_name: linux-desktop
+            artifact_paths: |
+              dist-electron/*.AppImage
+              dist-electron/*.deb
+          - name: Validate Windows Desktop Build
+            os: windows-latest
+            command: bun run desktop:dist:ci
+            artifact_name: windows-desktop
+            artifact_paths: |
+              dist-electron/*.exe
+          - name: Validate macOS Desktop Build
+            os: macos-latest
+            command: bun run desktop:dist:ci
+            artifact_name: macos-desktop
+            artifact_paths: |
+              dist-electron/*.dmg
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Cache Electron downloads (Unix)
+        if: runner.os != 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/electron
+            ~/.cache/electron-builder
+          key: ${{ runner.os }}-electron-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
+
+      - name: Cache Electron downloads (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~\AppData\Local\electron\Cache
+            ~\AppData\Local\electron-builder\Cache
+          key: ${{ runner.os }}-electron-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download prepared assets
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-prepared-assets
+          path: .
+
+      - name: Build desktop artifacts
+        run: ${{ matrix.command }}
+
+      - name: Upload desktop artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_paths }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: desktop-build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download desktop artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-artifacts/**/*.AppImage
+            release-artifacts/**/*.deb
+            release-artifacts/**/*.exe
+            release-artifacts/**/*.dmg
