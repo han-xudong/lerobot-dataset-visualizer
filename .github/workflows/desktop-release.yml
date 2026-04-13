@@ -191,14 +191,59 @@ jobs:
       contents: write
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Download desktop artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-artifacts
 
+      - name: Generate release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          current_tag="${{ github.ref_name }}"
+          previous_tag="$(git tag --sort=-version:refname | grep '^v' | grep -Fxv "$current_tag" | head -n 1 || true)"
+
+          if [[ -n "$previous_tag" ]]; then
+            change_range="$previous_tag..${{ github.sha }}"
+            changes="$(git log --no-merges --pretty='- %s' "$change_range")"
+          else
+            changes="- Initial release"
+          fi
+
+          if [[ -z "$changes" ]]; then
+            changes="- No user-facing changes listed"
+          fi
+
+          cat <<'EOF' > release-notes.md
+          ## Downloads
+
+          Choose the installer that matches your platform:
+
+          - Linux: `.deb` or `.AppImage`
+          - macOS: `.dmg`
+          - Windows: `.exe`
+
+          ## Changes
+
+          EOF
+
+          printf '%s\n' "$changes" >> release-notes.md
+
+          if [[ -n "$previous_tag" ]]; then
+            {
+              printf '\n## Full Changelog\n\n'
+              printf '%s\n' "Compare [$previous_tag...$current_tag](https://github.com/${{ github.repository }}/compare/$previous_tag...$current_tag)"
+            } >> release-notes.md
+          fi
+
       - name: Publish release assets
         uses: softprops/action-gh-release@v2
         with:
+          body_path: release-notes.md
           files: |
             release-artifacts/**/*.AppImage
             release-artifacts/**/*.deb
