@@ -8,6 +8,7 @@ import {
   getLocalDatasetPath,
   isLocalDatasetId,
 } from "@/utils/datasetSource";
+import { HTTP } from "@/utils/constants";
 
 const DATASET_URL =
   process.env.DATASET_URL || "https://huggingface.co/datasets";
@@ -138,15 +139,21 @@ export async function getDatasetInfo(repoId: string): Promise<DatasetInfo> {
     const testUrl = `${DATASET_URL}/${repoId}/resolve/main/meta/info.json`;
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(
+      () => controller.abort(),
+      HTTP.DATASET_INFO_TIMEOUT_MS,
+    );
 
-    const response = await fetch(testUrl, {
-      method: "GET",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
+    let response: Response;
+    try {
+      response = await fetch(testUrl, {
+        method: "GET",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeoutId);
+    }
 
     if (!response.ok) {
       throw new Error(`Failed to fetch dataset info: ${response.status}`);

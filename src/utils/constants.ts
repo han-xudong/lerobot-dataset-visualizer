@@ -33,8 +33,17 @@ export const VIDEO_PLAYER = {
 } as const;
 
 // HTTP configuration
+const parsedDatasetInfoTimeoutMs = Number.parseInt(
+  process.env.DATASET_INFO_TIMEOUT_MS ?? "",
+  10,
+);
+
 export const HTTP = {
-  TIMEOUT_MS: 10000,
+  DATASET_INFO_TIMEOUT_MS:
+    Number.isFinite(parsedDatasetInfoTimeoutMs) &&
+    parsedDatasetInfoTimeoutMs > 0
+      ? parsedDatasetInfoTimeoutMs
+      : 30_000,
 } as const;
 
 // Excluded columns by dataset version

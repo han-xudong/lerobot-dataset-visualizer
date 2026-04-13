@@ -1,8 +1,16 @@
 "use client";
-import { useEffect, useRef, useState, useCallback, Suspense } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  Suspense,
+  useTransition,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import Loading from "@/components/loading-component";
 import {
   buildDatasetRoute,
   isLikelyLocalDatasetInput,
@@ -37,11 +45,36 @@ const EXAMPLE_DATASETS = [
 function HomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const [, startTransition] = useTransition();
   const [isDesktopApp, setIsDesktopApp] = useState(false);
   const [isSelectingDirectory, setIsSelectingDirectory] = useState(false);
   const [directorySelectionError, setDirectorySelectionError] = useState<
     string | null
   >(null);
+  const [navigationState, setNavigationState] = useState<{
+    active: boolean;
+    title: string;
+    message: string;
+  }>({
+    active: false,
+    title: "Loading dataset…",
+    message: "Preparing metadata, charts, and videos",
+  });
+
+  const beginNavigation = useCallback(
+    (targetUrl: string, options?: { title?: string; message?: string }) => {
+      setNavigationState({
+        active: true,
+        title: options?.title ?? "Loading dataset…",
+        message: options?.message ?? "Preparing metadata, charts, and videos",
+      });
+
+      startTransition(() => {
+        router.push(targetUrl);
+      });
+    },
+    [router],
+  );
 
   // Handle redirects with useEffect instead of direct redirect
   useEffect(() => {
@@ -52,13 +85,19 @@ function HomeInner() {
           .map((x) => parseInt(x.trim(), 10))
           .filter((x) => !isNaN(x))[0] ?? 0;
 
-      router.push(buildDatasetRoute(process.env.REPO_ID, episodeN));
+      beginNavigation(buildDatasetRoute(process.env.REPO_ID, episodeN), {
+        title: "Opening dataset…",
+        message: "Fetching dataset metadata and the first episode",
+      });
       return;
     }
 
     // sync with hf.co/spaces URL params
     if (searchParams.get("path")) {
-      router.push(searchParams.get("path")!);
+      beginNavigation(searchParams.get("path")!, {
+        title: "Opening dataset…",
+        message: "Fetching dataset metadata and the selected episode",
+      });
       return;
     }
 
@@ -75,10 +114,13 @@ function HomeInner() {
     }
 
     if (redirectUrl) {
-      router.push(redirectUrl);
+      beginNavigation(redirectUrl, {
+        title: "Opening dataset…",
+        message: "Fetching dataset metadata and the selected episode",
+      });
       return;
     }
-  }, [searchParams, router]);
+  }, [beginNavigation, searchParams]);
 
   const playerRef = useRef<{ destroy?: () => void } | null>(null);
 
@@ -200,9 +242,17 @@ function HomeInner() {
   const navigate = useCallback(
     (value: string) => {
       setShowSuggestions(false);
-      router.push(buildDatasetRoute(value));
+      const trimmedValue = value.trim();
+      beginNavigation(buildDatasetRoute(trimmedValue), {
+        title: isLikelyLocalDatasetInput(trimmedValue)
+          ? "Opening local dataset…"
+          : "Opening dataset…",
+        message: isLikelyLocalDatasetInput(trimmedValue)
+          ? "Validating local files and preparing the first episode"
+          : "Fetching dataset metadata, charts, and videos",
+      });
     },
-    [router],
+    [beginNavigation],
   );
 
   const handleChooseDirectory = useCallback(async () => {
@@ -262,6 +312,13 @@ function HomeInner() {
 
   return (
     <div className="relative h-screen w-screen overflow-hidden">
+      {navigationState.active ? (
+        <Loading
+          title={navigationState.title}
+          message={navigationState.message}
+        />
+      ) : null}
+
       {/* YouTube Video Background */}
       <div className="video-background">
         <div id="yt-bg-player" />
@@ -479,6 +536,13 @@ function HomeInner() {
         {/* Explore CTA */}
         <Link
           href="/explore"
+          onClick={(event) => {
+            event.preventDefault();
+            beginNavigation("/explore", {
+              title: "Opening explorer…",
+              message: "Loading the dataset browser",
+            });
+          }}
           className="inline-flex items-center gap-2 px-6 py-3 mt-8 rounded-md bg-sky-500/90 backdrop-blur-sm text-white font-semibold text-lg shadow-lg hover:bg-sky-400 active:scale-95 transition-all"
         >
           Explore Open Datasets
