@@ -1,5 +1,5 @@
 {
-  "name": "lerobot-viewer",
+  "name": "lerobot-dataset-visualizer",
   "version": "0.1.0",
   "private": true,
   "description": "Desktop and web visualizer for LeRobot datasets.",

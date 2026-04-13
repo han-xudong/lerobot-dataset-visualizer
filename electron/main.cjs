@@ -1,9 +1,17 @@
-const { app, BrowserWindow, dialog, ipcMain } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  Menu,
+  dialog,
+  ipcMain,
+  shell,
+} = require("electron");
 const { fork } = require("node:child_process");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL;
+const APP_NAME = "LeRobot Dataset Visualizer";
 const SERVER_HOST = "127.0.0.1";
 const SERVER_PORT = Number(process.env.ELECTRON_INTERNAL_PORT ?? "3210");
 const IS_SMOKE_TEST =
@@ -16,6 +24,192 @@ const SERVER_READY_TIMEOUT_MS = Number(
 
 let mainWindow = null;
 let nextServerProcess = null;
+
+function stripTrailingSlashes(value) {
+  return value.replace(/[\\/]+$/, "");
+}
+
+function encodeLocalDatasetPath(localPath) {
+  return encodeURIComponent(stripTrailingSlashes(localPath.trim()));
+}
+
+function buildDatasetRoute(input, episode = 0) {
+  const trimmed = input.trim();
+  const isLikelyLocalPath =
+    trimmed.startsWith("/") ||
+    trimmed.startsWith("./") ||
+    trimmed.startsWith("../") ||
+    trimmed.startsWith("~/") ||
+    trimmed.startsWith("file://") ||
+    /^[A-Za-z]:[\\/]/.test(trimmed);
+
+  if (isLikelyLocalPath) {
+    return `/local/${encodeLocalDatasetPath(trimmed)}/episode_${episode}`;
+  }
+
+  return `/${trimmed.replace(/^https?:\/\/huggingface\.co\/datasets\//, "")}/episode_${episode}`;
+}
+
+function getAppBaseUrl() {
+  return DEV_SERVER_URL ?? `http://${SERVER_HOST}:${SERVER_PORT}`;
+}
+
+function buildAppUrl(route = "/") {
+  return new URL(route, `${getAppBaseUrl()}/`).toString();
+}
+
+async function navigateMainWindow(route) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    await createMainWindow(route);
+    return;
+  }
+
+  await mainWindow.loadURL(buildAppUrl(route));
+}
+
+function sendMenuCommand(command) {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    return;
+  }
+
+  mainWindow.webContents.send("desktop:menu-command", command);
+}
+
+async function promptForDatasetDirectory() {
+  const result = await dialog.showOpenDialog({
+    title: "Choose Local Dataset Directory",
+    properties: ["openDirectory"],
+  });
+
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+
+  const selectedPath = result.filePaths[0];
+  await validateDatasetDirectory(selectedPath);
+  return selectedPath;
+}
+
+async function openLocalDatasetFromMenu() {
+  try {
+    const selectedPath = await promptForDatasetDirectory();
+
+    if (!selectedPath) {
+      return;
+    }
+
+    await navigateMainWindow(buildDatasetRoute(selectedPath));
+  } catch (error) {
+    handleLaunchFailure(
+      "Failed to Open Local Dataset",
+      error instanceof Error
+        ? error
+        : new Error("Failed to choose a dataset directory."),
+    );
+  }
+}
+
+function buildAppMenuTemplate() {
+  const isMac = process.platform === "darwin";
+
+  return [
+    ...(isMac
+      ? [
+          {
+            label: APP_NAME,
+            submenu: [
+              { role: "services" },
+              { type: "separator" },
+              { role: "hide" },
+              { role: "hideOthers" },
+              { role: "unhide" },
+              { type: "separator" },
+              { role: "quit" },
+            ],
+          },
+        ]
+      : []),
+    {
+      label: "File",
+      submenu: [
+        {
+          label: "Home",
+          accelerator: "CmdOrCtrl+Shift+H",
+          click: () => navigateMainWindow("/"),
+        },
+        {
+          label: "Explore Datasets",
+          accelerator: "CmdOrCtrl+Shift+E",
+          click: () => navigateMainWindow("/explore"),
+        },
+        {
+          label: "Open Local Dataset Directory...",
+          accelerator: "CmdOrCtrl+O",
+          click: () => openLocalDatasetFromMenu(),
+        },
+        { type: "separator" },
+        isMac ? { role: "close" } : { role: "quit" },
+      ],
+    },
+    {
+      label: "Navigate",
+      submenu: [
+        {
+          label: "Previous Episode",
+          accelerator: "Alt+Up",
+          click: () => sendMenuCommand("episode-previous"),
+        },
+        {
+          label: "Next Episode",
+          accelerator: "Alt+Down",
+          click: () => sendMenuCommand("episode-next"),
+        },
+      ],
+    },
+    {
+      label: "View",
+      submenu: [
+        { role: "reload" },
+        { role: "forceReload" },
+        { type: "separator" },
+        {
+          label: "Toggle Theme",
+          accelerator: "CmdOrCtrl+Alt+T",
+          click: () => sendMenuCommand("toggle-theme"),
+        },
+        { type: "separator" },
+        { role: "resetZoom" },
+        { role: "zoomIn" },
+        { role: "zoomOut" },
+        { type: "separator" },
+        { role: "togglefullscreen" },
+        { role: "toggleDevTools" },
+      ],
+    },
+    {
+      label: "Help",
+      submenu: [
+        {
+          label: "GitHub Repository",
+          click: () =>
+            shell.openExternal(
+              "https://github.com/han-xudong/lerobot-dataset-visualizer",
+            ),
+        },
+        {
+          label: "LeRobot Docs",
+          click: () =>
+            shell.openExternal("https://huggingface.co/docs/lerobot"),
+        },
+      ],
+    },
+  ];
+}
+
+function installAppMenu() {
+  const menu = Menu.buildFromTemplate(buildAppMenuTemplate());
+  Menu.setApplicationMenu(menu);
+}
 
 function handleLaunchFailure(title, error) {
   const message = error instanceof Error ? error.message : String(error);
@@ -118,17 +312,17 @@ async function startBundledNextServer() {
   });
 }
 
-async function createMainWindow() {
-  const targetUrl = DEV_SERVER_URL ?? `http://${SERVER_HOST}:${SERVER_PORT}`;
+async function createMainWindow(initialRoute = "/") {
+  const targetUrl = buildAppUrl(initialRoute);
 
   if (!DEV_SERVER_URL) {
     await startBundledNextServer();
   }
 
-  await waitForServer(targetUrl, SERVER_READY_TIMEOUT_MS);
+  await waitForServer(getAppBaseUrl(), SERVER_READY_TIMEOUT_MS);
 
   if (IS_SMOKE_TEST) {
-    console.log(`Desktop smoke test server ready at ${targetUrl}`);
+    console.log(`Desktop smoke test server ready at ${getAppBaseUrl()}`);
     return;
   }
 
@@ -138,7 +332,7 @@ async function createMainWindow() {
     minWidth: 1100,
     minHeight: 760,
     backgroundColor: "#06080d",
-    title: "LeRobot Dataset Visualizer",
+    title: APP_NAME,
     webPreferences: {
       preload: getPreloadPath(),
       contextIsolation: true,
@@ -166,23 +360,10 @@ function stopNextServer() {
 }
 
 ipcMain.handle("desktop:select-dataset-directory", async () => {
-  const result = await dialog.showOpenDialog({
-    title: "Choose Local Dataset Directory",
-    properties: ["openDirectory"],
-  });
+  const selectedPath = await promptForDatasetDirectory();
 
-  if (result.canceled || result.filePaths.length === 0) {
+  if (!selectedPath) {
     return null;
-  }
-
-  const selectedPath = result.filePaths[0];
-
-  try {
-    await validateDatasetDirectory(selectedPath);
-  } catch {
-    throw new Error(
-      "Selected directory does not look like a LeRobot dataset. Expected meta/info.json.",
-    );
   }
 
   return selectedPath;
@@ -194,6 +375,9 @@ app.on("before-quit", () => {
 });
 
 app.whenReady().then(async () => {
+  app.setName(APP_NAME);
+  installAppMenu();
+
   try {
     await createMainWindow();
   } catch (error) {

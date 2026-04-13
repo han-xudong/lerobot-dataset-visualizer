@@ -8,7 +8,10 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const electronAppDir = path.join(os.tmpdir(), "lerobot-viewer-electron-app");
+const electronAppDir = path.join(
+  os.tmpdir(),
+  "lerobot-dataset-visualizer-electron-app",
+);
 const electronBuilderCli = path.join(
   repoRoot,
   "node_modules",

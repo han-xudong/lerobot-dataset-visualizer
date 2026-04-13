@@ -5,8 +5,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LeRobot Dataset Tool and Visualizer",
-  description: "Tool and Visualizer for LeRobot Datasets",
+  title: "LeRobot Dataset Visualizer",
+  description: "Visualizer for LeRobot Datasets",
 };
 
 export default function RootLayout({

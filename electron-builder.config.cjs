@@ -27,7 +27,7 @@ async function copyNextRuntime(appOutDir, electronPlatformName) {
 }
 
 module.exports = {
-  appId: "com.hanxudong.lerobot-viewer",
+  appId: "com.hanxudong.lerobot-dataset-visualizer",
   productName: PRODUCT_NAME,
   electronVersion: electronPackage.version,
   icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
@@ -44,6 +44,7 @@ module.exports = {
   linux: {
     target: ["AppImage", "deb"],
     category: "Science",
+    executableName: "lerobot-visualizer",
     icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
   },
   win: {

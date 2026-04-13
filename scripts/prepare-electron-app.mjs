@@ -7,7 +7,10 @@ const repoRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
 );
-const appDir = path.join(os.tmpdir(), "lerobot-viewer-electron-app");
+const appDir = path.join(
+  os.tmpdir(),
+  "lerobot-dataset-visualizer-electron-app",
+);
 const sourceElectronDir = path.join(repoRoot, "electron");
 const targetElectronDir = path.join(appDir, "electron");
 const rootPackageJsonPath = path.join(repoRoot, "package.json");

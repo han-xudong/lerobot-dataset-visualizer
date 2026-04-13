@@ -305,7 +305,7 @@ function EpisodeViewerInner({
     sessionStorage.setItem("framesFlaggedOnly", String(framesFlaggedOnly));
   }, [framesFlaggedOnly]);
 
-  const loadStats = () => {
+  const loadStats = useCallback(() => {
     if (statsLoadedRef.current) return;
     statsLoadedRef.current = true;
     setStatsLoading(true);
@@ -323,9 +323,9 @@ function EpisodeViewerInner({
     } else {
       setStatsLoading(false);
     }
-  };
+  }, [computeColumnMinMax, data.chartDataGroups, datasetId, dataset, org]);
 
-  const loadFrames = () => {
+  const loadFrames = useCallback(() => {
     if (framesLoadedRef.current || !datasetId) return;
     framesLoadedRef.current = true;
     setFramesLoading(true);
@@ -341,9 +341,9 @@ function EpisodeViewerInner({
       .finally(() => {
         if (mountedRef.current) setFramesLoading(false);
       });
-  };
+  }, [datasetId, dataset, org]);
 
-  const loadInsights = () => {
+  const loadInsights = useCallback(() => {
     if (insightsLoadedRef.current || !datasetId) return;
     insightsLoadedRef.current = true;
     setInsightsLoading(true);
@@ -356,7 +356,7 @@ function EpisodeViewerInner({
       .finally(() => {
         if (mountedRef.current) setInsightsLoading(false);
       });
-  };
+  }, [datasetId, dataset, org]);
 
   // Re-trigger data loading for the restored tab on mount
   useEffect(() => {
@@ -370,16 +370,81 @@ function EpisodeViewerInner({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleTabChange = (tab: ActiveTab) => {
-    setActiveTab(tab);
-    if (tab === "statistics") loadStats();
-    if (tab === "frames") loadFrames();
-    if (tab === "insights") loadInsights();
-    if (tab === "filtering") {
-      loadStats();
-      loadInsights();
+  const handleTabChange = useCallback(
+    (tab: ActiveTab) => {
+      setActiveTab(tab);
+      if (tab === "statistics") loadStats();
+      if (tab === "frames") loadFrames();
+      if (tab === "insights") loadInsights();
+      if (tab === "filtering") {
+        loadStats();
+        loadInsights();
+      }
+    },
+    [loadFrames, loadInsights, loadStats],
+  );
+
+  useEffect(() => {
+    if (!window.desktop?.onMenuCommand) {
+      return;
     }
-  };
+
+    return window.desktop.onMenuCommand((command) => {
+      switch (command) {
+        case "tab-episodes":
+          handleTabChange("episodes");
+          break;
+        case "tab-statistics":
+          handleTabChange("statistics");
+          break;
+        case "tab-filtering":
+          handleTabChange("filtering");
+          break;
+        case "tab-frames":
+          handleTabChange("frames");
+          break;
+        case "tab-insights":
+          handleTabChange("insights");
+          break;
+        case "tab-urdf":
+          if (
+            hasURDFSupport(datasetInfo.robot_type) &&
+            datasetInfo.codebase_version >= "v3.0"
+          ) {
+            handleTabChange("urdf");
+          }
+          break;
+        case "toggle-theme":
+          setTheme((currentTheme) =>
+            currentTheme === "dark" ? "light" : "dark",
+          );
+          break;
+        case "episode-next": {
+          const nextEpisodeId = episodeId + 1;
+          const highestEpisodeId = episodes[episodes.length - 1];
+          if (nextEpisodeId <= highestEpisodeId) {
+            router.push(`./episode_${nextEpisodeId}`);
+          }
+          break;
+        }
+        case "episode-previous": {
+          const previousEpisodeId = episodeId - 1;
+          const lowestEpisodeId = episodes[0];
+          if (previousEpisodeId >= lowestEpisodeId) {
+            router.push(`./episode_${previousEpisodeId}`);
+          }
+          break;
+        }
+      }
+    });
+  }, [
+    datasetInfo.codebase_version,
+    datasetInfo.robot_type,
+    episodeId,
+    episodes,
+    handleTabChange,
+    router,
+  ]);
 
   // Use context for time sync
   const { currentTime, setCurrentTime, setIsPlaying, isPlaying } = useTime();
