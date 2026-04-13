@@ -77,6 +77,36 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `src/app/page.tsx` or other files in the `src/` directory. The app supports hot-reloading for rapid development.
 
+### Loading Datasets
+
+The home page now supports two dataset sources:
+
+- Hugging Face dataset ids, for example `lerobot/aloha_static_cups_open`
+- Local LeRobot dataset directories, for example `/data/lerobot/my_dataset`
+
+For local directories, the app expects a standard LeRobot layout with files such as `meta/info.json`, parquet files under `data/`, and video files under `videos/`.
+
+### Local Directory Support
+
+Local directory mode works by:
+
+- Encoding the selected local path into the existing route structure
+- Reading `meta/info.json`, parquet files, and metadata directly from disk on the server
+- Serving local videos through an internal API route so the browser can stream them with HTTP range requests
+
+Important constraints:
+
+- The Next.js server process must have read access to the dataset directory
+- The directory must exist on the same machine where the app is running
+- Browser folder pickers usually do **not** expose the absolute directory path for security reasons
+
+Because of that browser limitation, the most reliable workflow is still to paste the local directory path manually into the home page.
+
+The `Choose Local Directory` button is a best-effort helper:
+
+- In environments that expose a non-standard file path property, it can auto-fill the local path
+- In standard browsers, it can validate selection intent but may still require manual path pasting
+
 ### Other Commands
 
 ```bash
@@ -96,6 +126,8 @@ bun run format
 ### Environment Variables
 
 - `DATASET_URL`: (optional) Base URL for dataset hosting (defaults to HuggingFace Datasets).
+
+No extra environment variable is required for local datasets.
 
 ## Docker Deployment
 

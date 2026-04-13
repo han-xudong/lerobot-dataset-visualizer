@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  allowedDevOrigins: ["127.0.0.1", "localhost", "*.localhost"],
   transpilePackages: ["three"],
   generateBuildId: () => packageJson.version,
 };

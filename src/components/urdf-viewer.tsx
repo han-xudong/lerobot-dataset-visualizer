@@ -18,11 +18,9 @@ import { Line2 } from "three/examples/jsm/lines/Line2.js";
 import { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js";
 import { LineGeometry } from "three/examples/jsm/lines/LineGeometry.js";
 import type { EpisodeData } from "@/app/[org]/[dataset]/[episode]/fetch-data";
-import { loadEpisodeFlatChartData } from "@/app/[org]/[dataset]/[episode]/fetch-data";
+import { fetchEpisodeChartData } from "@/app/[org]/[dataset]/[episode]/actions";
 import UrdfPlaybackBar from "@/components/urdf-playback-bar";
 import { CHART_CONFIG } from "@/utils/constants";
-import { getDatasetVersionAndInfo } from "@/utils/versionUtils";
-import type { DatasetMetadata } from "@/utils/parquetUtils";
 
 const SERIES_DELIM = CHART_CONFIG.SERIES_NAME_DELIMITER;
 const DEG2RAD = Math.PI / 180;
@@ -555,20 +553,6 @@ export default function URDFViewer({
   );
   const { urdfUrl, scale } = robotConfig;
   const isG1 = urdfUrl.includes("g1");
-  const repoId = org && dataset ? `${org}/${dataset}` : null;
-  const datasetInfoRef = useRef<{
-    version: string;
-    info: DatasetMetadata;
-  } | null>(null);
-
-  const ensureDatasetInfo = useCallback(async () => {
-    if (!repoId) return null;
-    if (datasetInfoRef.current) return datasetInfoRef.current;
-    const { version, info } = await getDatasetVersionAndInfo(repoId);
-    const payload = { version, info: info as unknown as DatasetMetadata };
-    datasetInfoRef.current = payload;
-    return payload;
-  }, [repoId]);
 
   // Episode selection & chart data
   const [selectedEpisode, setSelectedEpisode] = useState(data.episodeId);
@@ -590,27 +574,17 @@ export default function URDFViewer({
         return;
       }
 
-      if (!repoId) return;
+      if (!org || !dataset) return;
       setEpisodeLoading(true);
-      ensureDatasetInfo()
-        .then((payload) => {
-          if (!payload) return null;
-          return loadEpisodeFlatChartData(
-            repoId,
-            payload.version,
-            payload.info,
-            epId,
-          );
-        })
+      fetchEpisodeChartData(org, dataset, epId)
         .then((result) => {
-          if (!result) return;
           chartDataCache.current[epId] = result;
           setChartData(result);
         })
         .catch((err) => console.error("Failed to load episode:", err))
         .finally(() => setEpisodeLoading(false));
     },
-    [ensureDatasetInfo, repoId],
+    [dataset, org],
   );
 
   useEffect(() => {
@@ -896,6 +870,7 @@ export default function URDFViewer({
                       <td className="px-1 text-slate-600">→</td>
                       <td className="px-1 py-0.5">
                         <select
+                          aria-label={`Dataset column mapping for ${jointName}`}
                           value={mapping[jointName] ?? ""}
                           onChange={(e) =>
                             setMapping((m) => ({
