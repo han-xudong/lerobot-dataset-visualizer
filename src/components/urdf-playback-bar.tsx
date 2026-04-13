@@ -31,16 +31,16 @@ export default function UrdfPlaybackBar({
       {/* Play/Pause */}
       <button
         onClick={onPlayPause}
-        className="w-8 h-8 flex items-center justify-center rounded bg-orange-600 hover:bg-orange-500 text-white transition-colors shrink-0"
+        className="brand-focus-ring brand-control-button-active flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors"
       >
         {playing ? (
           <svg width="12" height="14" viewBox="0 0 12 14">
-            <rect x="1" y="1" width="3" height="12" fill="white" />
-            <rect x="8" y="1" width="3" height="12" fill="white" />
+            <rect x="1" y="1" width="3" height="12" fill="currentColor" />
+            <rect x="8" y="1" width="3" height="12" fill="currentColor" />
           </svg>
         ) : (
           <svg width="12" height="14" viewBox="0 0 12 14">
-            <polygon points="2,1 11,7 2,13" fill="white" />
+            <polygon points="2,1 11,7 2,13" fill="currentColor" />
           </svg>
         )}
       </button>
@@ -48,10 +48,8 @@ export default function UrdfPlaybackBar({
       {/* Trail toggle */}
       <button
         onClick={onTrailToggle}
-        className={`px-2 h-8 text-xs rounded transition-colors shrink-0 ${
-          trailEnabled
-            ? "bg-orange-600/30 text-orange-400 border border-orange-500"
-            : "bg-slate-700 text-slate-400 border border-slate-600"
+        className={`brand-focus-ring h-8 shrink-0 rounded-full px-3 text-xs transition-colors ${
+          trailEnabled ? "brand-control-button-active" : "brand-control-button"
         }`}
         title={trailEnabled ? "Hide trail" : "Show trail"}
       >
@@ -65,19 +63,21 @@ export default function UrdfPlaybackBar({
         max={Math.max(totalFrames - 1, 0)}
         value={frame}
         onChange={onFrameChange}
-        className="flex-1 h-1.5 accent-orange-500 cursor-pointer"
+        title="URDF timeline"
+        aria-label="URDF timeline"
+        className="brand-focus-ring brand-scrubber h-1.5 flex-1 cursor-pointer"
       />
-      <span className="text-xs text-slate-400 tabular-nums w-28 text-right shrink-0">
+      <span className="text-ink-muted w-28 shrink-0 text-right text-xs tabular-nums">
         {currentTime}s / {totalTime}s
       </span>
-      <span className="text-xs text-slate-500 tabular-nums w-20 text-right shrink-0">
+      <span className="text-ink-soft w-20 shrink-0 text-right text-xs tabular-nums">
         F {frame}/{Math.max(totalFrames - 1, 0)}
       </span>
 
       {/* Keyboard hints */}
-      <div className="text-xs text-slate-500 select-none hidden md:flex flex-col gap-y-0.5 ml-2 shrink-0">
+      <div className="text-ink-soft ml-2 hidden shrink-0 select-none flex-col gap-y-0.5 text-xs md:flex">
         <p>
-          <span className="px-1.5 py-0.5 rounded border border-slate-600 bg-slate-800 text-slate-400 text-xs">
+          <span className="glass-chip text-ink rounded-full px-1.5 py-0.5 text-xs">
             Space
           </span>{" "}
           pause/unpause

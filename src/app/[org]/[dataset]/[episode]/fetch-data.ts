@@ -80,6 +80,7 @@ export type EpisodeFramesData = {
 export type EpisodeData = {
   datasetInfo: DatasetDisplayInfo;
   episodeId: number;
+  currentEpisodeFrames: number;
   videosInfo: VideoInfo[];
   chartDataGroups: ChartRow[][];
   flatChartData: Record<string, number>[];
@@ -301,9 +302,11 @@ export async function getEpisodeData(
 ): Promise<EpisodeData> {
   const repoId = buildDatasetId(org, dataset);
   try {
-    console.time(`[perf] getDatasetVersionAndInfo`);
+    const datasetVersionStart = performance.now();
     const { version, info: rawInfo } = await getDatasetVersionAndInfo(repoId);
-    console.timeEnd(`[perf] getDatasetVersionAndInfo`);
+    console.log(
+      `[perf] getDatasetVersionAndInfo ${repoId} ${(performance.now() - datasetVersionStart).toFixed(0)}ms`,
+    );
     const info = rawInfo as unknown as DatasetMetadata;
 
     if (info.video_path === null) {
@@ -312,12 +315,14 @@ export async function getEpisodeData(
       );
     }
 
-    console.time(`[perf] getEpisodeData (${version})`);
+    const episodeDataStart = performance.now();
     const result =
       version === "v3.0"
         ? await getEpisodeDataV3(repoId, version, info, episodeId)
         : await getEpisodeDataV2(repoId, version, info, episodeId);
-    console.timeEnd(`[perf] getEpisodeData (${version})`);
+    console.log(
+      `[perf] getEpisodeData (${version}) ${repoId} episode_${episodeId} ${(performance.now() - episodeDataStart).toFixed(0)}ms`,
+    );
 
     // Extract camera resolutions from features
     const cameras: CameraInfo[] = Object.entries(rawInfo.features)
@@ -634,6 +639,8 @@ async function getEpisodeDataV2(
       ? sampledChartData[sampledChartData.length - 1].timestamp
       : 0;
 
+  const currentEpisodeFrames = allData.length;
+
   const chartDataGroups = chartGroups.map((group) =>
     sampledChartData.map((row) => {
       const grouped = groupRowBySuffix(pick(row, [...group, "timestamp"]));
@@ -649,6 +656,7 @@ async function getEpisodeDataV2(
   return {
     datasetInfo,
     episodeId,
+    currentEpisodeFrames,
     videosInfo,
     chartDataGroups,
     flatChartData: sampledChartData,
@@ -703,9 +711,17 @@ async function getEpisodeDataV3(
     ? episodeMetadata.length / info.fps
     : episodeMetadata.video_to_timestamp - episodeMetadata.video_from_timestamp;
 
+  const currentEpisodeFrames = Math.max(
+    0,
+    episodeMetadata.length ||
+      Math.round(duration * info.fps) ||
+      flatChartData.length,
+  );
+
   return {
     datasetInfo,
     episodeId,
+    currentEpisodeFrames,
     videosInfo,
     chartDataGroups,
     flatChartData,

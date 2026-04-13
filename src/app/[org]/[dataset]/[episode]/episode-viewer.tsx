@@ -8,7 +8,9 @@ import {
   Suspense,
   useCallback,
 } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { FaHome, FaMoon, FaSun } from "react-icons/fa";
 import { postParentMessageWithParams } from "@/utils/postParentMessage";
 import { SimpleVideosPlayer } from "@/components/simple-videos-player";
 import DataRecharts from "@/components/data-recharts";
@@ -45,6 +47,24 @@ const ActionInsightsPanel = lazy(
   () => import("@/components/action-insights-panel"),
 );
 const FilteringPanel = lazy(() => import("@/components/filtering-panel"));
+const THEME_STORAGE_KEY = "episode-viewer-theme";
+
+function resolveInitialTheme(initialTheme: "dark" | "light") {
+  if (typeof window === "undefined") {
+    return initialTheme;
+  }
+
+  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+  if (storedTheme === "light" || storedTheme === "dark") {
+    return storedTheme;
+  }
+
+  if (window.matchMedia("(prefers-color-scheme: light)").matches) {
+    return "light";
+  }
+
+  return initialTheme;
+}
 
 type ActiveTab =
   | "episodes"
@@ -58,12 +78,14 @@ export default function EpisodeViewer({
   org,
   dataset,
   episodeId,
+  initialTheme,
   initialData,
   initialError,
 }: {
   org: string;
   dataset: string;
   episodeId: number;
+  initialTheme: "dark" | "light";
   initialData: EpisodeData | null;
   initialError: string | null;
 }) {
@@ -89,7 +111,7 @@ export default function EpisodeViewer({
   if (!data) {
     return (
       <div className="relative h-screen bg-slate-950">
-        <Loading />
+        <Loading theme={initialTheme} />
       </div>
     );
   }
@@ -97,7 +119,12 @@ export default function EpisodeViewer({
   return (
     <TimeProvider duration={data!.duration}>
       <FlaggedEpisodesProvider>
-        <EpisodeViewerInner data={data!} org={org} dataset={dataset} />
+        <EpisodeViewerInner
+          data={data!}
+          org={org}
+          dataset={dataset}
+          initialTheme={initialTheme}
+        />
       </FlaggedEpisodesProvider>
     </TimeProvider>
   );
@@ -107,27 +134,41 @@ function EpisodeViewerInner({
   data,
   org,
   dataset,
+  initialTheme,
 }: {
   data: EpisodeData;
   org?: string;
   dataset?: string;
+  initialTheme: "dark" | "light";
 }) {
   const {
     datasetInfo,
     episodeId,
+    currentEpisodeFrames,
     videosInfo,
     chartDataGroups,
     episodes,
     task,
   } = data;
+  const visibleEpisodeFrameCount =
+    currentEpisodeFrames ??
+    Math.max(0, Math.round(data.duration * datasetInfo.fps));
 
   const [videosReady, setVideosReady] = useState(!videosInfo.length);
   const [chartsReady, setChartsReady] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">(() =>
+    resolveInitialTheme(initialTheme),
+  );
 
   const loadStartRef = useRef(performance.now());
 
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  useEffect(() => {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    document.cookie = `${THEME_STORAGE_KEY}=${theme}; path=/; max-age=31536000; samesite=lax`;
+  }, [theme]);
 
   // Tab state & lazy stats
   const [activeTab, setActiveTab] = useState<ActiveTab>("episodes");
@@ -349,15 +390,6 @@ function EpisodeViewerInner({
   const [urdfEpisode, setUrdfEpisode] = useState(episodeId);
   useEffect(() => setUrdfEpisode(episodeId), [episodeId]);
 
-  // Pagination state
-  const pageSize = 100;
-  const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(episodes.length / pageSize);
-  const paginatedEpisodes = episodes.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  );
-
   // Warm the browser cache for adjacent episodes' videos without relying on
   // unsupported preload hints for video resources.
   useEffect(() => {
@@ -442,18 +474,12 @@ function EpisodeViewerInner({
 
   // Initialize based on URL time parameter
   useEffect(() => {
-    // Initialize page based on current episode
-    const episodeIndex = episodes.indexOf(episodeId);
-    if (episodeIndex !== -1) {
-      setCurrentPage(Math.floor(episodeIndex / pageSize) + 1);
-    }
-
     // Add keyboard event listener
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [episodes, episodeId, pageSize, handleKeyDown]);
+  }, [handleKeyDown]);
 
   // Only update URL ?t= param when the integer second changes
   const lastUrlSecondRef = useRef<number>(-1);
@@ -476,118 +502,110 @@ function EpisodeViewerInner({
     }
   }, [isPlaying, currentTime, searchParams]);
 
-  // Pagination functions
-  const nextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
-
-  const prevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-slate-950 text-gray-200">
+    <div
+      className="brand-aurora relative flex h-screen max-h-screen flex-col overflow-hidden text-slate-100"
+      data-theme={theme}
+    >
+      <div className="pointer-events-none absolute inset-0 bg-white/[0.05]" />
+      <div className="pointer-events-none absolute inset-0 bg-white/[0.03]" />
+
       {/* Top tab bar */}
-      <div className="flex items-center border-b border-slate-700 bg-slate-900 shrink-0">
+      <div className="glass-panel-strong relative z-10 mx-4 mt-4 flex shrink-0 flex-wrap items-center gap-2 rounded-[28px] px-3 py-2">
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
-            activeTab === "episodes"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
+            activeTab === "episodes" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("episodes")}
         >
           Episodes
-          {activeTab === "episodes" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
             activeTab === "statistics"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+              ? "brand-pill-active"
+              : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("statistics")}
         >
           Statistics
-          {activeTab === "statistics" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
-            activeTab === "filtering"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
+            activeTab === "filtering" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("filtering")}
         >
           Filtering
-          {activeTab === "filtering" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
-            activeTab === "frames"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
+            activeTab === "frames" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("frames")}
         >
           Frames
-          {activeTab === "frames" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         <button
-          className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
-            activeTab === "insights"
-              ? "text-orange-400"
-              : "text-slate-400 hover:text-slate-200"
+          className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
+            activeTab === "insights" ? "brand-pill-active" : "brand-pill-ghost"
           }`}
           onClick={() => handleTabChange("insights")}
         >
           Action Insights
-          {activeTab === "insights" && (
-            <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-          )}
         </button>
         {hasURDFSupport(datasetInfo.robot_type) &&
           datasetInfo.codebase_version >= "v3.0" && (
             <button
-              className={`px-6 py-2.5 text-sm font-medium transition-colors relative ${
-                activeTab === "urdf"
-                  ? "text-orange-400"
-                  : "text-slate-400 hover:text-slate-200"
+              className={`brand-focus-ring relative rounded-full px-5 py-2.5 text-sm font-medium transition-all ${
+                activeTab === "urdf" ? "brand-pill-active" : "brand-pill-ghost"
               }`}
               onClick={() => handleTabChange("urdf")}
             >
               3D Replay
-              {activeTab === "urdf" && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-orange-500" />
-              )}
             </button>
           )}
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() =>
+              setTheme((currentTheme) =>
+                currentTheme === "dark" ? "light" : "dark",
+              )
+            }
+            className="brand-focus-ring brand-pill-ghost inline-flex items-center justify-center rounded-full p-3 transition-all"
+            title={
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme"
+            }
+            aria-label={
+              theme === "dark"
+                ? "Switch to light theme"
+                : "Switch to dark theme"
+            }
+          >
+            {theme === "dark" ? <FaSun size={18} /> : <FaMoon size={18} />}
+          </button>
+          <Link
+            href="/"
+            className="brand-focus-ring brand-pill-ghost inline-flex items-center justify-center rounded-full p-3 transition-all"
+            title="Return to home"
+            aria-label="Return to home"
+          >
+            <FaHome size={18} />
+          </Link>
+        </div>
       </div>
 
       {/* Body: sidebar + content */}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative z-10 flex min-h-0 flex-1 gap-4 px-4 pb-4 pt-4 md:gap-5">
         {/* Sidebar — on Episodes and 3D Replay tabs */}
         {(activeTab === "episodes" || activeTab === "urdf") && (
           <Sidebar
             datasetInfo={datasetInfo}
-            paginatedEpisodes={paginatedEpisodes}
+            episodes={episodes}
             episodeId={activeTab === "urdf" ? urdfEpisode : episodeId}
-            totalPages={totalPages}
-            currentPage={currentPage}
-            prevPage={prevPage}
-            nextPage={nextPage}
             showFlaggedOnly={sidebarFlaggedOnly}
             onShowFlaggedOnlyChange={setSidebarFlaggedOnly}
             onEpisodeSelect={
@@ -603,45 +621,57 @@ function EpisodeViewerInner({
 
         {/* Main content */}
         <div
-          className={`flex flex-col gap-4 p-4 flex-1 relative ${isLoading ? "overflow-hidden" : "overflow-y-auto"}`}
+          className={`theme-scrollbar glass-panel-strong flex flex-1 flex-col gap-5 overflow-hidden rounded-[32px] p-5 md:p-6 relative ${isLoading ? "overflow-hidden" : "overflow-y-auto"}`}
         >
-          {isLoading && <Loading />}
+          {isLoading && <Loading theme={theme} />}
 
           {activeTab === "episodes" && (
             <>
-              <div className="flex items-center justify-start my-4">
-                <a
-                  href="https://github.com/huggingface/lerobot"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src="https://github.com/huggingface/lerobot/raw/main/media/readme/lerobot-logo-thumbnail.png"
-                    alt="LeRobot Logo"
-                    className="w-32"
-                  />
-                </a>
-
-                <div>
-                  {isLocalDatasetId(datasetInfo.repoId) ? (
-                    <p className="text-lg font-semibold break-all">
-                      {getDatasetDisplayName(datasetInfo.repoId)}
+              <div className="glass-panel flex items-center justify-between gap-6 rounded-[28px] px-5 py-5">
+                <div className="flex min-w-0 items-center gap-5">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-[0.7rem] uppercase tracking-[0.28em] text-white/38">
+                      Episode Viewer
                     </p>
-                  ) : (
-                    <a
-                      href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
-                      target="_blank"
-                    >
-                      <p className="text-lg font-semibold">
-                        {datasetInfo.repoId}
+                    {isLocalDatasetId(datasetInfo.repoId) ? (
+                      <p className="break-all text-lg font-semibold text-white md:text-2xl">
+                        {getDatasetDisplayName(datasetInfo.repoId)}
                       </p>
-                    </a>
-                  )}
+                    ) : (
+                      <a
+                        href={`https://huggingface.co/datasets/${datasetInfo.repoId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="transition-colors hover:text-white"
+                      >
+                        <p className="text-lg font-semibold text-white md:text-2xl">
+                          {datasetInfo.repoId}
+                        </p>
+                      </a>
+                    )}
 
-                  <p className="font-mono text-lg font-semibold">
-                    episode {episodeId}
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="glass-chip text-ink rounded-full px-3 py-1 font-mono uppercase tracking-[0.2em]">
+                        episode_{episodeId}
+                      </span>
+                      <span className="glass-chip text-ink-muted rounded-full px-3 py-1 font-mono">
+                        {datasetInfo.codebase_version}
+                      </span>
+                      <span className="glass-chip text-ink-muted rounded-full px-3 py-1 font-mono">
+                        {datasetInfo.robot_type ?? "unknown robot"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="hidden text-right md:block">
+                  <p className="text-ink-faint text-xs uppercase tracking-[0.24em]">
+                    Frames / FPS
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold text-white">
+                    {visibleEpisodeFrameCount.toLocaleString()}
+                    <span className="text-ink-soft ml-2 text-sm font-normal">
+                      @ {datasetInfo.fps}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -656,13 +686,13 @@ function EpisodeViewerInner({
 
               {/* Language Instruction */}
               {task && (
-                <div className="mb-6 p-4 bg-slate-800 rounded-lg border border-slate-600">
-                  <p className="text-slate-300">
-                    <span className="font-semibold text-slate-100">
+                <div className="glass-panel mb-2 rounded-[24px] p-5">
+                  <p className="text-ink">
+                    <span className="text-ink-strong font-semibold">
                       Language Instruction:
                     </span>
                   </p>
-                  <div className="mt-2 text-slate-300">
+                  <div className="text-ink mt-3">
                     {task
                       .split("\n")
                       .map((instruction: string, index: number) => (
@@ -704,7 +734,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "insights" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <ActionInsightsPanel
                 flatChartData={data.flatChartData}
                 fps={datasetInfo.fps}
@@ -715,7 +745,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "filtering" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <FilteringPanel
                 repoId={datasetInfo.repoId}
                 crossEpisodeData={crossEpData}
@@ -731,7 +761,7 @@ function EpisodeViewerInner({
           )}
 
           {activeTab === "urdf" && (
-            <Suspense fallback={<Loading />}>
+            <Suspense fallback={<Loading theme={theme} />}>
               <URDFViewer
                 data={data}
                 org={org}

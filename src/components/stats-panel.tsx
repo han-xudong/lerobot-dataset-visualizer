@@ -43,7 +43,7 @@ function EpisodeLengthHistogram({
   const labelStep = Math.max(1, Math.ceil(data.length / 10));
 
   return (
-    <div className="overflow-x-auto">
+    <div className="theme-scrollbar overflow-x-auto">
       <svg
         width={svgWidth}
         height={topPad + chartHeight + labelHeight}
@@ -62,7 +62,7 @@ function EpisodeLengthHistogram({
                 y={y}
                 width={barWidth}
                 height={barH}
-                className="fill-orange-500/80 hover:fill-orange-400 transition-colors"
+                className="histogram-bar fill-white/80 transition-colors"
                 rx={Math.min(2, barWidth / 4)}
               />
               {bin.count > 0 && barWidth >= 8 && (
@@ -70,7 +70,7 @@ function EpisodeLengthHistogram({
                   x={x + barWidth / 2}
                   y={y - 3}
                   textAnchor="middle"
-                  className="fill-slate-400"
+                  className="histogram-label fill-white/55"
                   fontSize={Math.min(10, barWidth - 1)}
                 >
                   {bin.count}
@@ -90,7 +90,7 @@ function EpisodeLengthHistogram({
               x={idx * (barWidth + gap) + barWidth / 2}
               y={topPad + chartHeight + 14}
               textAnchor="middle"
-              className="fill-slate-400"
+              className="histogram-axis-label fill-white/55"
               fontSize={9}
             >
               {label}s
@@ -104,9 +104,13 @@ function EpisodeLengthHistogram({
 
 function Card({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-slate-800/60 rounded-lg p-4 border border-slate-700">
-      <p className="text-xs text-slate-400 uppercase tracking-wide">{label}</p>
-      <p className="text-xl font-bold tabular-nums mt-1">{value}</p>
+    <div className="glass-panel rounded-[24px] p-4">
+      <p className="text-ink-faint text-xs uppercase tracking-[0.2em]">
+        {label}
+      </p>
+      <p className="text-ink-strong mt-2 text-xl font-bold tabular-nums">
+        {value}
+      </p>
     </div>
   );
 }
@@ -119,11 +123,14 @@ function StatsPanel({
   const els = episodeLengthStats;
 
   return (
-    <div className="max-w-4xl mx-auto py-6 space-y-8">
+    <div className="mx-auto max-w-5xl space-y-8 py-2">
       <div>
-        <h2 className="text-xl text-slate-100">
-          <span className="font-bold">Dataset Statistics:</span>{" "}
-          <span className="font-normal text-slate-400">
+        <p className="text-ink-faint mb-2 text-[0.72rem] uppercase tracking-[0.28em]">
+          Dataset Statistics
+        </p>
+        <h2 className="text-ink text-xl md:text-2xl">
+          <span className="text-ink-strong font-bold">Dataset Statistics:</span>{" "}
+          <span className="text-ink-soft font-normal">
             {datasetInfo.repoId}
           </span>
         </h2>
@@ -154,20 +161,20 @@ function StatsPanel({
 
       {/* Camera resolutions */}
       {datasetInfo.cameras.length > 0 && (
-        <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
-          <h3 className="text-sm font-semibold text-slate-200 mb-3">
+        <div className="glass-panel rounded-[28px] p-5">
+          <h3 className="text-ink-strong mb-3 text-sm font-semibold">
             Camera Resolutions
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {datasetInfo.cameras.map((cam: CameraInfo) => (
-              <div key={cam.name} className="bg-slate-900/50 rounded-md p-3">
+              <div key={cam.name} className="glass-chip rounded-2xl p-3">
                 <p
-                  className="text-xs text-slate-400 mb-1 truncate"
+                  className="text-ink-soft mb-1 truncate text-xs"
                   title={cam.name}
                 >
                   {cam.name}
                 </p>
-                <p className="text-base font-bold tabular-nums">
+                <p className="text-ink-strong text-base font-bold tabular-nums">
                   {cam.width}×{cam.height}
                 </p>
               </div>
@@ -178,7 +185,7 @@ function StatsPanel({
 
       {/* Loading spinner for async stats */}
       {loading && (
-        <div className="flex items-center gap-2 text-slate-400 text-sm py-4">
+        <div className="text-ink-soft flex items-center gap-2 py-4 text-sm">
           <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
             <circle
               className="opacity-25"
@@ -201,8 +208,8 @@ function StatsPanel({
       {/* Episode length section */}
       {els && (
         <>
-          <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-200 mb-4">
+          <div className="glass-panel rounded-[28px] p-5">
+            <h3 className="text-ink-strong mb-4 text-sm font-semibold">
               Episode Lengths
             </h3>
             <div className="grid grid-cols-3 md:grid-cols-5 gap-4 mb-4">
@@ -221,10 +228,10 @@ function StatsPanel({
           </div>
 
           {els.episodeLengthHistogram.length > 0 && (
-            <div className="bg-slate-800/60 rounded-lg p-5 border border-slate-700">
-              <h3 className="text-sm font-semibold text-slate-200 mb-4">
+            <div className="glass-panel rounded-[28px] p-5">
+              <h3 className="text-ink-strong mb-4 text-sm font-semibold">
                 Episode Length Distribution
-                <span className="text-xs text-slate-500 ml-2 font-normal">
+                <span className="text-ink-faint ml-2 text-xs font-normal">
                   {els.episodeLengthHistogram.length} bin
                   {els.episodeLengthHistogram.length !== 1 ? "s" : ""}
                 </span>

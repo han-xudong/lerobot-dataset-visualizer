@@ -220,20 +220,20 @@ export const SimpleVideosPlayer = ({
       {hiddenVideos.length > 0 && (
         <div className="relative mb-4">
           <button
-            className="flex items-center gap-2 rounded bg-slate-800 px-3 py-2 text-sm text-slate-100 hover:bg-slate-700 border border-slate-500"
+            className="brand-focus-ring brand-control-button flex items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors"
             onClick={() => setShowHiddenMenu(!showHiddenMenu)}
           >
             <FaEye /> Show Hidden Videos ({hiddenVideos.length})
           </button>
           {showHiddenMenu && (
-            <div className="absolute left-0 mt-2 w-max rounded border border-slate-500 bg-slate-900 shadow-lg p-2 z-50">
-              <div className="mb-2 text-xs text-slate-300">
+            <div className="glass-panel absolute left-0 z-50 mt-2 w-max rounded-2xl p-2 shadow-lg">
+              <div className="text-ink-muted mb-2 text-xs">
                 Restore hidden videos:
               </div>
               {hiddenVideos.map((filename) => (
                 <button
                   key={filename}
-                  className="block w-full text-left px-2 py-1 rounded hover:bg-slate-700 text-slate-100"
+                  className="brand-focus-ring brand-control-list-item block w-full rounded-xl px-2 py-1 text-left transition-colors"
                   onClick={() =>
                     setHiddenVideos((prev) =>
                       prev.filter((v) => v !== filename),
@@ -261,16 +261,16 @@ export const SimpleVideosPlayer = ({
               key={info.filename}
               className={`${
                 isEnlarged
-                  ? "z-40 fixed inset-0 bg-black bg-opacity-90 flex flex-col items-center justify-center"
+                  ? "enlarged-video-stage z-40 fixed inset-0 flex flex-col items-center justify-center p-6 backdrop-blur-2xl"
                   : "max-w-96"
               }`}
             >
-              <p className="truncate w-full rounded-t-xl bg-gray-800 px-2 text-sm text-gray-300 flex items-center justify-between">
+              <p className="glass-panel text-ink flex w-full items-center justify-between truncate rounded-t-[22px] px-3 py-2 text-sm">
                 <span>{info.filename}</span>
                 <span className="flex gap-1">
                   <button
                     title={isEnlarged ? "Minimize" : "Enlarge"}
-                    className="ml-2 p-1 hover:bg-slate-700 rounded"
+                    className="brand-focus-ring brand-control-button ml-2 rounded-full p-1.5 transition-colors"
                     onClick={() =>
                       setEnlargedVideo(isEnlarged ? null : info.filename)
                     }
@@ -279,7 +279,7 @@ export const SimpleVideosPlayer = ({
                   </button>
                   <button
                     title="Hide Video"
-                    className="ml-1 p-1 hover:bg-slate-700 rounded"
+                    className="brand-focus-ring brand-control-button ml-1 rounded-full p-1.5 transition-colors"
                     onClick={() =>
                       setHiddenVideos((prev) => [...prev, info.filename])
                     }
@@ -298,7 +298,9 @@ export const SimpleVideosPlayer = ({
                   videoRefs.current[idx] = el;
                 }}
                 className={`w-full object-contain ${
-                  isEnlarged ? "max-h-[90vh] max-w-[90vw]" : ""
+                  isEnlarged
+                    ? "max-h-[90vh] max-w-[90vw] rounded-b-[22px]"
+                    : "rounded-b-[22px]"
                 }`}
                 muted
                 preload="auto"
