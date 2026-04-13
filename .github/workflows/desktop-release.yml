@@ -130,6 +130,41 @@ jobs:
       - name: Build desktop artifacts
         run: ${{ matrix.command }}
 
+      - name: Ensure xvfb is available
+        if: runner.os == 'Linux'
+        run: |
+          if ! command -v xvfb-run >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y xvfb
+          fi
+
+      - name: Smoke test Linux desktop app
+        if: runner.os == 'Linux'
+        run: |
+          command -v xvfb-run
+          node scripts/smoke-test-packaged-app.mjs xvfb-run -a dist-electron/linux-unpacked/lerobot-viewer --no-sandbox --disable-setuid-sandbox
+
+      - name: Smoke test Windows desktop app
+        if: runner.os == 'Windows'
+        env:
+          SMOKE_TEST_TIMEOUT_MS: 90000
+        run: |
+          node scripts/smoke-test-packaged-app.mjs "dist-electron/win-unpacked/LeRobot Dataset Visualizer.exe"
+
+      - name: Smoke test macOS desktop app
+        if: runner.os == 'macOS'
+        env:
+          SMOKE_TEST_TIMEOUT_MS: 90000
+        run: |
+          app_binary="$(find dist-electron -path '*/LeRobot Dataset Visualizer.app/Contents/MacOS/LeRobot Dataset Visualizer' -print -quit)"
+          if [[ -z "$app_binary" ]]; then
+            echo "Unable to locate packaged macOS app binary under dist-electron"
+            find dist-electron -maxdepth 3 -type d | sort
+            exit 1
+          fi
+          export SMOKE_TEST_CLEANUP_COMMAND="pkill -f 'LeRobot Dataset Visualizer.app/Contents/MacOS/LeRobot Dataset Visualizer' || true"
+          node scripts/smoke-test-packaged-app.mjs "$app_binary" --desktop-smoke-test
+
       - name: Upload desktop artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -6,9 +6,29 @@ const path = require("node:path");
 const DEV_SERVER_URL = process.env.ELECTRON_RENDERER_URL;
 const SERVER_HOST = "127.0.0.1";
 const SERVER_PORT = Number(process.env.ELECTRON_INTERNAL_PORT ?? "3210");
+const IS_SMOKE_TEST =
+  process.env.DESKTOP_SMOKE_TEST === "1" ||
+  process.argv.includes("--desktop-smoke-test");
+const SERVER_READY_TIMEOUT_MS = Number(
+  process.env.ELECTRON_SERVER_READY_TIMEOUT_MS ??
+    (IS_SMOKE_TEST ? "90000" : "30000"),
+);
 
 let mainWindow = null;
 let nextServerProcess = null;
+
+function handleLaunchFailure(title, error) {
+  const message = error instanceof Error ? error.message : String(error);
+
+  if (IS_SMOKE_TEST) {
+    console.error(`${title}: ${message}`);
+    app.exit(1);
+    return;
+  }
+
+  dialog.showErrorBox(title, message);
+  app.quit();
+}
 
 function getAppRoot() {
   return app.isPackaged ? process.resourcesPath : app.getAppPath();
@@ -62,6 +82,12 @@ async function startBundledNextServer() {
   const standaloneDirectory = getStandaloneDirectory();
   const serverEntry = path.join(standaloneDirectory, "server.js");
 
+  await fs.access(serverEntry);
+
+  if (IS_SMOKE_TEST) {
+    console.log(`Starting bundled Next.js server from ${serverEntry}`);
+  }
+
   nextServerProcess = fork(serverEntry, [], {
     cwd: standaloneDirectory,
     env: {
@@ -76,11 +102,18 @@ async function startBundledNextServer() {
     nextServerProcess = null;
 
     if (!app.isQuitting && code && code !== 0) {
-      dialog.showErrorBox(
+      handleLaunchFailure(
         "Next.js Server Stopped",
         `The embedded Next.js server exited with code ${code}.`,
       );
-      app.quit();
+    }
+  });
+
+  nextServerProcess.once("error", (error) => {
+    nextServerProcess = null;
+
+    if (!app.isQuitting) {
+      handleLaunchFailure("Failed to Start Next.js Server", error);
     }
   });
 }
@@ -92,7 +125,12 @@ async function createMainWindow() {
     await startBundledNextServer();
   }
 
-  await waitForServer(targetUrl);
+  await waitForServer(targetUrl, SERVER_READY_TIMEOUT_MS);
+
+  if (IS_SMOKE_TEST) {
+    console.log(`Desktop smoke test server ready at ${targetUrl}`);
+    return;
+  }
 
   mainWindow = new BrowserWindow({
     width: 1440,
@@ -159,14 +197,14 @@ app.whenReady().then(async () => {
   try {
     await createMainWindow();
   } catch (error) {
-    dialog.showErrorBox(
-      "Failed to Launch Desktop App",
-      error instanceof Error ? error.message : String(error),
-    );
-    app.quit();
+    handleLaunchFailure("Failed to Launch Desktop App", error);
   }
 
   app.on("activate", async () => {
+    if (IS_SMOKE_TEST) {
+      return;
+    }
+
     if (BrowserWindow.getAllWindows().length === 0) {
       await createMainWindow();
     }
