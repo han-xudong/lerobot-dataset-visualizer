@@ -72,6 +72,8 @@ jobs:
           - name: Validate Linux Desktop Build
             os: ubuntu-latest
             command: bun run desktop:dist:ci
+            package_layout: linux
+            check_layout: true
             artifact_name: linux-desktop
             artifact_paths: |
               dist-electron/*.AppImage
@@ -79,12 +81,16 @@ jobs:
           - name: Validate Windows Desktop Build
             os: windows-latest
             command: bun run desktop:dist:ci
+            package_layout: win
+            check_layout: true
             artifact_name: windows-desktop
             artifact_paths: |
               dist-electron/*.exe
           - name: Validate macOS Desktop Build
             os: macos-latest
             command: bun run desktop:dist:ci
+            package_layout: mac
+            check_layout: false
             artifact_name: macos-desktop
             artifact_paths: |
               dist-electron/*.dmg
@@ -129,6 +135,10 @@ jobs:
 
       - name: Build desktop artifacts
         run: ${{ matrix.command }}
+
+      - name: Check packaged layout
+        if: ${{ matrix.check_layout }}
+        run: node scripts/report-desktop-package-layout.mjs ${{ matrix.package_layout }}
 
       - name: Ensure xvfb is available
         if: runner.os == 'Linux'

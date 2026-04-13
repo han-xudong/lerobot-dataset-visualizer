@@ -2,10 +2,24 @@ const fs = require("node:fs/promises");
 const path = require("node:path");
 
 const electronDist = require("./scripts/electron-builder-electron-dist.cjs");
+const electronPackage = require("electron/package.json");
+const PRODUCT_NAME = "LeRobot Dataset Visualizer";
+const ROOT_DIR = __dirname;
 
-async function copyNextRuntime(appOutDir) {
+function getResourcesDirectory(appOutDir, electronPlatformName) {
+  if (electronPlatformName === "darwin") {
+    return path.join(appOutDir, `${PRODUCT_NAME}.app`, "Contents", "Resources");
+  }
+
+  return path.join(appOutDir, "resources");
+}
+
+async function copyNextRuntime(appOutDir, electronPlatformName) {
   const source = path.join(__dirname, ".next", "standalone");
-  const destination = path.join(appOutDir, "resources", "next");
+  const destination = path.join(
+    getResourcesDirectory(appOutDir, electronPlatformName),
+    "next",
+  );
 
   await fs.rm(destination, { recursive: true, force: true });
   await fs.mkdir(path.dirname(destination), { recursive: true });
@@ -14,29 +28,44 @@ async function copyNextRuntime(appOutDir) {
 
 module.exports = {
   appId: "com.hanxudong.lerobot-viewer",
-  productName: "LeRobot Dataset Visualizer",
-  icon: "public/assets/icons/lerobot-icon.png",
+  productName: PRODUCT_NAME,
+  electronVersion: electronPackage.version,
+  icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
   compression: "normal",
   npmRebuild: false,
   electronDist: electronDist.default,
   directories: {
-    output: "dist-electron",
+    output: path.join(ROOT_DIR, "dist-electron"),
   },
-  files: ["electron/**/*", "package.json"],
+  files: ["**/*"],
   afterPack: async (context) => {
-    await copyNextRuntime(context.appOutDir);
+    await copyNextRuntime(context.appOutDir, context.electronPlatformName);
   },
   linux: {
     target: ["AppImage", "deb"],
     category: "Science",
-    icon: "public/assets/icons/lerobot-icon.png",
+    icon: path.join(ROOT_DIR, "public", "assets", "icons", "lerobot-icon.png"),
   },
   win: {
     target: ["nsis"],
-    icon: "public/assets/icons/generated/lerobot.ico",
+    icon: path.join(
+      ROOT_DIR,
+      "public",
+      "assets",
+      "icons",
+      "generated",
+      "lerobot.ico",
+    ),
   },
   mac: {
     target: ["dmg"],
-    icon: "public/assets/icons/generated/lerobot.icns",
+    icon: path.join(
+      ROOT_DIR,
+      "public",
+      "assets",
+      "icons",
+      "generated",
+      "lerobot.icns",
+    ),
   },
 };
