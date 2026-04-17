@@ -10,8 +10,6 @@ export function isLikelyLocalDatasetInput(value: string): boolean {
   const trimmed = value.trim();
   return (
     trimmed.startsWith("/") ||
-    trimmed.startsWith("./") ||
-    trimmed.startsWith("../") ||
     trimmed.startsWith("~/") ||
     trimmed.startsWith("file://") ||
     /^[A-Za-z]:[\\/]/.test(trimmed)

@@ -110,7 +110,7 @@ Important constraints:
 - The directory must exist on the same machine where the app is running
 - Browser folder pickers usually do **not** expose the absolute directory path for security reasons
 
-Because of that browser limitation, the Web version keeps the manual path input workflow.
+Because of that browser limitation, the Web version keeps the manual absolute-path input workflow.
 
 The native `Choose Local Directory` button is available only in the Electron desktop app, where the OS file picker can return a real directory path.
 

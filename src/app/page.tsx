@@ -46,6 +46,7 @@ function HomeInner() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const [isVideoReady, setIsVideoReady] = useState(false);
   const [isDesktopApp, setIsDesktopApp] = useState(false);
   const [isSelectingDirectory, setIsSelectingDirectory] = useState(false);
   const [directorySelectionError, setDirectorySelectionError] = useState<
@@ -126,16 +127,15 @@ function HomeInner() {
 
   useEffect(() => {
     setIsDesktopApp(Boolean(window.desktop?.isElectron));
+    setIsVideoReady(false);
 
-    // Load YouTube IFrame API if not already present
-    if (!window.YT) {
-      const tag = document.createElement("script");
-      tag.src = "https://www.youtube.com/iframe_api";
-      document.body.appendChild(tag);
-    }
-    let interval: NodeJS.Timeout;
-    window.onYouTubeIframeAPIReady = () => {
-      if (!window.YT) return;
+    const initializePlayer = () => {
+      if (!window.YT?.Player) return;
+
+      if (playerRef.current?.destroy) {
+        playerRef.current.destroy();
+      }
+
       playerRef.current = new window.YT.Player("yt-bg-player", {
         videoId: "Er8SPJsIYr0",
         playerVars: {
@@ -161,6 +161,7 @@ function HomeInner() {
           }) => {
             event.target.playVideo();
             event.target.mute();
+            setIsVideoReady(true);
             interval = setInterval(() => {
               const t = event.target.getCurrentTime();
               if (t >= 60) {
@@ -171,8 +172,27 @@ function HomeInner() {
         },
       });
     };
+
+    // Load YouTube IFrame API if not already present
+    if (!window.YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      tag.onerror = () => {
+        setIsVideoReady(false);
+      };
+      document.body.appendChild(tag);
+    }
+    let interval: NodeJS.Timeout;
+
+    if (window.YT?.Player) {
+      initializePlayer();
+    } else {
+      window.onYouTubeIframeAPIReady = initializePlayer;
+    }
+
     return () => {
       if (interval) clearInterval(interval);
+      setIsVideoReady(false);
       if (playerRef.current && playerRef.current.destroy)
         playerRef.current.destroy();
     };
@@ -320,7 +340,11 @@ function HomeInner() {
       ) : null}
 
       {/* YouTube Video Background */}
-      <div className="video-background">
+      <div
+        className={`video-background transition-opacity duration-700 ${
+          isVideoReady ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <div id="yt-bg-player" />
       </div>
 
@@ -338,7 +362,8 @@ function HomeInner() {
 
         {/* Subtitle */}
         <p className="text-white/55 text-base md:text-lg mb-8 max-w-md">
-          Explore robot learning datasets from Hugging Face or a local directory
+          Explore robot learning datasets from Hugging Face or an absolute local
+          path
         </p>
 
         {/* Search form */}
@@ -371,7 +396,7 @@ function HomeInner() {
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   onFocus={() => query.trim() && setShowSuggestions(true)}
-                  placeholder="Enter HF dataset id or local directory"
+                  placeholder="Enter HF dataset id or local path"
                   className="pl-10 pr-4 py-2.5 rounded-md text-base text-white bg-white/10 backdrop-blur-sm border border-white/30 focus:outline-none focus:border-sky-400 focus:bg-white/15 w-[380px] shadow-md placeholder:text-white/40 transition-colors"
                   autoComplete="off"
                 />
@@ -492,13 +517,13 @@ function HomeInner() {
               <span className="font-mono text-sky-200">lerobot/pusht</span>.
             </p>
           </div>
-          <div className="rounded-xl border border-emerald-300/20 bg-emerald-500/10 px-4 py-4 backdrop-blur-sm">
-            <p className="text-xs uppercase tracking-[0.2em] text-emerald-100/60 mb-2">
+          <div className="rounded-xl border border-white/10 bg-white/8 px-4 py-4 backdrop-blur-sm">
+            <p className="text-xs uppercase tracking-[0.2em] text-white/40 mb-2">
               Local Path
             </p>
-            <p className="text-sm text-emerald-50/90">
-              Paste an absolute or relative directory path like{" "}
-              <span className="font-mono text-emerald-100">
+            <p className="text-sm text-white/80">
+              Paste an absolute directory path like{" "}
+              <span className="font-mono text-sky-200">
                 /data/lerobot/my_dataset
               </span>
               {isDesktopApp
@@ -512,8 +537,8 @@ function HomeInner() {
         <div className="mt-8">
           <p className="text-white/50 text-sm mb-4 max-w-xl">
             Supports Hugging Face datasets like{" "}
-            <span className="font-mono">lerobot/pusht</span> and local
-            directories like{" "}
+            <span className="font-mono">lerobot/pusht</span> and local absolute
+            paths like{" "}
             <span className="font-mono">/data/lerobot/my_dataset</span>.
           </p>
           <p className="text-white/40 text-xs uppercase tracking-widest mb-3 font-medium">
